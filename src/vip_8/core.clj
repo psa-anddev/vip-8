@@ -1,5 +1,7 @@
 (ns vip-8.core
-  (:require [vip-8.rom :as rom]))
+  (:require [vip-8.rom :as rom]
+            [vip-8.screen :as screen]
+            [vip-8.cpu :as cpu]))
 
 (defn load-rom [filename]
   (let [font '(
@@ -44,6 +46,21 @@
                  :vD 0x00
                  :vE 0x00
                  :vF 0x00
-                 :pc 0x200}
+                 :pc 0x200
+                 :index 0x000}
      :timers {:delay 0
               :sound 0}}))
+
+(defn step
+  "Executes an instruction and returns the resulting status"
+  [prev-status]
+  (let [instruction 
+        (cpu/read-instruction prev-status)
+        after-reading-status 
+    (assoc prev-status 
+           :registers 
+           (assoc (:registers prev-status)
+                  :pc
+                  (+ (:pc (:registers prev-status)) 2)))]
+    (cpu/execute instruction 
+                 after-reading-status)))

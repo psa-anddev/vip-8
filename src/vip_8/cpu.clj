@@ -1,0 +1,49 @@
+(ns vip-8.cpu
+  (:require [vip-8.screen :as screen]))
+
+(defn read-instruction 
+  "Reads the instruction at the program counter
+  and returns the nibles"
+  [status]
+  (let [pc (:pc (:registers status))
+        memory (:memory status)
+        first-byte (nth memory pc)
+        second-byte (nth memory (inc pc))
+        i (bit-or (bit-shift-left first-byte 0x8)
+                  second-byte)
+        opcode (bit-shift-right (bit-and i 0xF000) 0xC)]
+    (if (= opcode 0x0)
+      {:instruction i
+       :x 0
+       :y 0
+       :n 0
+       :nn 0
+       :nnn 0}
+      {:instruction opcode
+       :x 0
+       :y 0
+       :n 0
+       :nn 0
+       :nnn (bit-and i 0xFFF)})))
+
+(defn execute 
+  "Executes a given instruction"
+  [instruction state]
+  (if (= (:instruction instruction)
+         0x00e0)
+    ((fn [s]
+       (screen/clear)
+       s)
+     state)
+    (let [address (:nnn instruction)
+          memory (:memory state)
+          first-byte (nth memory address)
+          second-byte (nth memory (inc address))
+          new-value (bit-or (bit-shift-left first-byte 0x8)
+                                              second-byte)]
+    (assoc state 
+           :registers 
+           (assoc (:registers state)
+                  :index
+                  new-value)))))
+

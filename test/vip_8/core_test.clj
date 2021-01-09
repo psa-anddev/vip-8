@@ -1,7 +1,8 @@
 (ns vip-8.core-test
   (:require [clojure.test :refer [deftest testing is]]
             [vip-8.core :refer :all]
-            [vip-8.rom :as rom]))
+            [vip-8.rom :as rom]
+            [vip-8.screen :as screen]))
 
 (deftest load-rom-tests
   (testing "font is loading in memory in addresses from 050 to 09F"
@@ -232,4 +233,34 @@
       (is (and (= (:delay timers)
                   0)
                (= (:sound timers)
-                  0)))))))
+                  0))))))
+(testing "index register is set to 0"
+  (with-redefs [rom/read-rom (fn [_] [])]
+    (let [registers (:registers (load-rom "tetris.ch8"))]
+      (is (= (:index registers) 0x000)))))
+(let [screen (atom (repeat 32 (repeat 64 true)))]
+  (with-redefs [rom/read-rom 
+                (fn [_] [0x00 0xE0 0xA2 0x01])
+                screen/clear 
+                (fn []
+                  (swap! screen 
+                         (fn [_] 
+                           (repeat 32 (repeat 64 false)))))]
+    (let [initial-status (load-rom "pong.ch8")]
+      (testing "clear instruction clears the screen"
+        (let [status (step initial-status)]
+          (is (= (:pc (:registers status))
+                 0x202))
+          (is (= (count (filter 
+                          #(> (count 
+                                (filter (fn [x] x) %)) 0) @screen))
+                 0))))
+      (testing "index register can be set"
+        (let [status (step (assoc initial-status
+                                  :registers
+                                  (assoc (:registers initial-status)
+                                         :pc
+                                         0x202)))
+              registers (:registers status)]
+          (is (= (:pc registers) 0x204))
+          (is (= (:index registers) 0xE0A2))))))))
