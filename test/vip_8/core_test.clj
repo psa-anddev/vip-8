@@ -178,12 +178,58 @@
         (is (= actual expected))))))
 (testing "there are 4096 bytes of available memory"
   (let [rom [0x00 0xE0 0x14 0x78]]
-    (with-redefs [rom/read-rom (fn [_] [0x00 0xE0])]
+    (with-redefs [rom/read-rom (fn [_] rom)]
       (let [status (load-rom "test.ch8")
             memory (:memory status)]
         (is (= 4096 (count memory)))))))
 (testing "the stack is empty"
   (with-redefs [rom/read-rom (fn [_] [])]
     (let [stack (:stack (load-rom "test.ch8"))]
-    (is (and (empty? stack)
-             (not (nil? stack))))))))
+      (is (and (empty? stack)
+               (not (nil? stack)))))))
+(testing "the v registers are set to 0x00"
+  (with-redefs [rom/read-rom (fn [_] [])]
+    (let [registers (:registers (load-rom "tetris.ch8"))]
+      (is (and (= (:v0 registers)
+                  0x00)
+               (= (:v1 registers)
+                  0x00)
+               (= (:v2 registers)
+                  0x00)
+               (= (:v3 registers)
+                  0x00)
+               (= (:v4 registers)
+                  0x00)
+               (= (:v5 registers)
+                  0x00)
+               (= (:v6 registers)
+                  0x00)
+               (= (:v7 registers)
+                  0x00)
+               (= (:v8 registers)
+                  0x00)
+               (= (:v9 registers)
+                  0x00)
+               (= (:vA registers)
+                  0x00)
+               (= (:vB registers)
+                  0x00)
+               (= (:vC registers)
+                  0x00)
+               (= (:vD registers)
+                  0x00)
+               (= (:vE registers)
+                  0x00)
+               (= (:vF registers)
+                  0x00))))))
+(testing "program counter is set to 0x200"
+  (with-redefs [rom/read-rom (fn [_] [])]
+    (is (= (:pc (:registers (load-rom "tetris.ch8")))
+           0x200))))
+(testing "timers start at value 0"
+  (with-redefs [rom/read-rom (fn [_] [])]
+    (let [timers (:timers (load-rom "tetris.ch8"))]
+      (is (and (= (:delay timers)
+                  0)
+               (= (:sound timers)
+                  0)))))))
