@@ -39,27 +39,36 @@
 (defn execute 
   "Executes a given instruction"
   [instruction state]
-  (let [instructions {:e0 (fn [] 
-                              (screen/clear)
-                              state)
-                      :6 (fn []
-                           (assoc state
-                                  :registers
-                                  (assoc (:registers state)
-                                         (keyword (str "v" (string/upper-case (format "%x" (:x instruction)))))
-                                         (:nn instruction))))
-                      :a (fn []
-                           (let [address (:nnn instruction)
-                                 memory (:memory state)
-                                 first-byte (nth memory address)
-                                 second-byte (nth memory (inc address))
-                                 new-value (bit-or (bit-shift-left first-byte 0x8)
-                                                   second-byte)]
-                             (assoc state 
-                                    :registers 
-                                    (assoc (:registers state)
-                                           :index
-                                           new-value))))}
+  (defn clear-screen []
+    (screen/clear)
+    state)
+
+  (defn set-register [status register value]
+    (assoc status
+           :registers
+           (assoc (:registers status)
+                  register
+                  value)))
+
+  (defn set-v-register []
+    (set-register state
+                  (keyword (str "v" (string/upper-case (format "%x" (:x instruction)))))
+                  (:nn instruction)))
+
+  (defn set-index-register []
+    (let [address (:nnn instruction)
+          memory (:memory state)
+          first-byte (nth memory address)
+          second-byte (nth memory (inc address))
+          new-value (bit-or (bit-shift-left first-byte 0x8)
+                            second-byte)]
+      (set-register state
+                    :index
+                    new-value)))
+
+  (let [instructions {:e0 clear-screen
+                      :6 set-v-register
+                      :a set-index-register}
         op-keyword (keyword (format "%x" (:instruction instruction)))]
   (if (nil? op-keyword)
     (throw "Instruction ")
