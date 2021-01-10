@@ -34,6 +34,12 @@
             (let [status (core/step (core/step initial-status))
                   registers (:registers status)]
               (is (= (:pc registers) 0x204))
-              (is (= (:index registers) 0xff00)))))))))
+              (is (= (:index registers) 0xff00))))
+          (testing "First three instructions in the execution"
+            (let [status (core/step (core/step (core/step initial-status)))
+                  registers (:registers status)]
+              (is (= (:pc registers) 0x206))
+              (is (= (:v0 registers)
+                     0x0C)))))))))
 
 
