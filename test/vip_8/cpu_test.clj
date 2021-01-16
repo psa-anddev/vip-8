@@ -56,19 +56,35 @@
   (is (= (read-instruction {:memory [0x1F 0x8A 0xA1 0x0B 0x60 0x45]
                             :registers {:pc 0x004}})
          {:instruction 0x6
-            :x 0x0
-            :y 0x0
-            :n 0x0
-            :nn 0x45
-            :nnn 0x000}))
+          :x 0x0
+          :y 0x0
+          :n 0x0
+          :nn 0x45
+          :nnn 0x000}))
   (is (= (read-instruction {:memory [0x63 0xCD]
                             :registers {:pc 0x000}})
          {:instruction 0x6
-            :x 0x3
-            :y 0x0
-            :n 0x0
-            :nn 0xCD
-            :nnn 0x000})))
+          :x 0x3
+          :y 0x0
+          :n 0x0
+          :nn 0xCD
+          :nnn 0x000}))
+  (is (= (read-instruction {:memory [0xd0 0x12]
+                            :registers {:pc 0x000}})
+         {:instruction 0xd
+          :x 0x0
+          :y 0x1
+          :n 0x2
+          :nn 0x0
+          :nnn 0x0}))
+  (is (= (read-instruction {:memory [0xd3 0xAF]
+                            :registers {:pc 0x000}})
+         {:instruction 0xd
+          :x 0x3
+          :y 0xA
+          :n 0xF
+          :nn 0x0
+          :nnn 0x0})))
 
 (deftest execute-test
   (testing "instruction 0x00e0 clears the screen"
@@ -90,15 +106,15 @@
                         :registers {:index 0x0}})]
           (is (not  @cleared?))
           (is (= (:index (:registers result))
-                 0xBA91)))
+                 0x001)))
         (let [result 
               (execute {:instruction 0xA
-                        :nnn 0x000} 
+                        :nnn 0xABC} 
                        {:memory [0x1C 0xBA] 
                         :registers {:index 0x0}})]
           (is (not  @cleared?))
           (is (= (:index (:registers result))
-                 0x1CBA))))))
+                 0xABC))))))
   (testing "instruction 0x6 sets given register to given value"
     (let [status {:registers {:v0 0x0
                               :v1 0x0
@@ -133,12 +149,99 @@
                                        status)))
              0xBA))
       (let [actual (execute {:instruction 0x6
-                                        :x 0xD
-                                        :y 0x0
-                                        :n 0x0
-                                        :nn 0xFF
-                                        :nnn 0x0}
-                                       status)
+                             :x 0xD
+                             :y 0x0
+                             :n 0x0
+                             :nn 0xFF
+                             :nnn 0x0}
+                            status)
             registers (:registers actual)]
         (is (= (:v3 registers) 0x0))
-        (is (= (:vD registers) 0xFF))))))
+        (is (= (:vD registers) 0xFF)))))
+  (testing "instruction 0xD draws a N-pixel tall sprite at coordinate given by vX and vY"
+    (let [screen (atom #{})]
+      (with-redefs [screen/is-on? (fn [x y] (not (empty? (filter (fn [[ax ay]] 
+                                                                   (and (= x ax)
+                                                                        (= y ay)))
+                                                                 @screen))))
+                    screen/set (fn [x y on?]
+                                 (swap! screen
+                                        (fn [v]
+                                          (if on?
+                                            (into #{} (cons (list x y) v))
+                                            (into #{} (filter #(not= % '(x y)) v))))))]
+        (let [result
+              (execute {:instruction 0xD
+                        :x 0xF
+                        :y 0x3
+                        :n 0x8}
+                       {:memory [0xFF]
+                        :registers {:v3 0x0
+                                    :vf 0x0
+                                    :index 0x0
+                                    :pc 0x0}})]
+          (is (= #{'(0x0 0x0)
+                   '(0x1 0x0)
+                   '(0x2 0x0)
+                   '(0x3 0x0)
+                   '(0x4 0x0)
+                   '(0x5 0x0)
+                   '(0x6 0x0)
+                   '(0x7 0x0)
+                   '(0x0 0x1)
+                   '(0x1 0x1)
+                   '(0x2 0x1)
+                   '(0x3 0x1)
+                   '(0x4 0x1)
+                   '(0x5 0x1)
+                   '(0x6 0x1)
+                   '(0x7 0x1)
+                   '(0x0 0x2)
+                   '(0x1 0x2)
+                   '(0x2 0x2)
+                   '(0x3 0x2)
+                   '(0x4 0x2)
+                   '(0x5 0x2)
+                   '(0x6 0x2)
+                   '(0x7 0x2)
+                   '(0x0 0x3)
+                   '(0x1 0x3)
+                   '(0x2 0x3)
+                   '(0x3 0x3)
+                   '(0x4 0x3)
+                   '(0x5 0x3)
+                   '(0x6 0x3)
+                   '(0x7 0x3)
+                   '(0x0 0x4)
+                   '(0x1 0x4)
+                   '(0x2 0x4)
+                   '(0x3 0x4)
+                   '(0x4 0x4)
+                   '(0x5 0x4)
+                   '(0x6 0x4)
+                   '(0x7 0x4)
+                   '(0x0 0x5)
+                   '(0x1 0x5)
+                   '(0x2 0x5)
+                   '(0x3 0x5)
+                   '(0x4 0x5)
+                   '(0x5 0x5)
+                   '(0x6 0x5)
+                   '(0x7 0x5)
+                   '(0x0 0x6)
+                   '(0x1 0x6)
+                   '(0x2 0x6)
+                   '(0x3 0x6)
+                   '(0x4 0x6)
+                   '(0x5 0x6)
+                   '(0x6 0x6)
+                   '(0x7 0x6)
+                   '(0x0 0x7)
+                   '(0x1 0x7)
+                   '(0x2 0x7)
+                   '(0x3 0x7)
+                   '(0x4 0x7)
+                   '(0x5 0x7)
+                   '(0x6 0x7)
+                   '(0x7 0x7)}
+                 @screen)))))))

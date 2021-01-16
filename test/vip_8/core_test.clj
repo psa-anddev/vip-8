@@ -263,4 +263,4 @@
                                          0x202)))
               registers (:registers status)]
           (is (= (:pc registers) 0x204))
-          (is (= (:index registers) 0xE0A2))))))))
+          (is (= (:index registers) 0x201))))))))

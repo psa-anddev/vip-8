@@ -22,8 +22,17 @@
         (is (= (nth (:memory initial-status) 
                     (:pc (:registers initial-status)))
                0x00)))
-      (let [screen (atom (repeat 32 (repeat 64 true)))]
-        (with-redefs [screen/clear (fn [] (swap! screen (fn [_] (repeat 32 (repeat 64 false)))))]
+      (let [screen (atom (into [] (repeat 32 (into [] (repeat 64 true)))))]
+        (with-redefs [screen/clear (fn [] (swap! screen (fn [_] (into [] (repeat 32 (into [] (repeat 64 false)))))))
+                      screen/is-on? (fn [x y] (nth y (nth x @screen)))
+                      screen/set (fn [x y on?] 
+                                   (swap! screen 
+                                          (fn [v] 
+                                            (assoc v
+                                                   x
+                                                   (assoc (nth v x)
+                                                          y
+                                                          on?)))))]
           (testing "First instruction in the execution"
             (let [status (core/step initial-status)]
               (is (= (:pc (:registers status))
@@ -34,12 +43,30 @@
             (let [status (core/step (core/step initial-status))
                   registers (:registers status)]
               (is (= (:pc registers) 0x204))
-              (is (= (:index registers) 0xff00))))
+              (is (= (:index registers) 0x22a))))
           (testing "First three instructions in the execution"
             (let [status (core/step (core/step (core/step initial-status)))
                   registers (:registers status)]
               (is (= (:pc registers) 0x206))
               (is (= (:v0 registers)
-                     0x0C)))))))))
+                     0x0C))))
+          (testing "First four instructions in the execution"
+            (let [status (core/step  (core/step (core/step (core/step initial-status))))
+                  registers (:registers status)]
+              (is (= (:pc registers) 0x208))
+              (is (= (:v1 registers) 0x08))))
+          (testing "First four instructions in the execution"
+            (let [status (core/step (core/step  (core/step (core/step (core/step initial-status)))))
+                  registers (:registers status)]
+              (is (= (:pc registers) 0x20A))
+              (let [result-screen @screen]
+                (loop [x 0
+                       y 0]
+                  (if (< y 0xf)
+                    (let [actual (nth (nth result-screen x) y)]
+                      (is actual)
+                      (recur (if (< x 7) (inc x) 0)
+                             (if (= x 7) (inc y) y))))))
+              (is (= (:vF registers) 0x00)))))))))
 
 

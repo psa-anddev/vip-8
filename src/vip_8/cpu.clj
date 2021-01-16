@@ -28,13 +28,24 @@
        :n 0
        :nn second-byte
        :nnn 0x0}
-      :else
+      (or (= opcode 0xA)
+          (= opcode 0x2)
+          (= opcode 0x1))
       {:instruction opcode
        :x 0
        :y 0
        :n 0
        :nn 0
-       :nnn (bit-and i 0xFFF)})))
+       :nnn (bit-and i 0xFFF)}
+      (= opcode 0xD)
+      {:instruction opcode
+       :x (bit-shift-right (bit-and i 0xF00) 0x8)
+       :y (bit-shift-right (bit-and i 0xF0) 0x4)
+       :n (bit-and i 0xF)
+       :nn 0x0
+       :nnn 0x0}
+      :else
+      (throw (Exception. (str  "Instruction " (format "0x%x" opcode) " not implemented"))))))
 
 (defn execute 
   "Executes a given instruction"
@@ -56,21 +67,27 @@
                   (:nn instruction)))
 
   (defn set-index-register []
-    (let [address (:nnn instruction)
-          memory (:memory state)
-          first-byte (nth memory address)
-          second-byte (nth memory (inc address))
-          new-value (bit-or (bit-shift-left first-byte 0x8)
-                            second-byte)]
+    (let [new-value (:nnn instruction)]
       (set-register state
                     :index
                     new-value)))
 
+  (defn draw-sprite []
+    (let [height (:n instruction)]
+      (loop [x 0
+             y 0]
+        (if (< y height)
+          (do (screen/set x y true)
+              (recur (if (< x 7) (inc x) 0)
+                     (if (= x 7) (inc y) y)))
+          state))))
+
   (let [instructions {:e0 clear-screen
                       :6 set-v-register
-                      :a set-index-register}
+                      :a set-index-register
+                      :d draw-sprite}
         op-keyword (keyword (format "%x" (:instruction instruction)))]
-  (if (nil? op-keyword)
-    (throw "Instruction ")
-    ((op-keyword instructions)))))
+    (if (nil? op-keyword)
+      (throw "Instruction ")
+      ((op-keyword instructions)))))
 
