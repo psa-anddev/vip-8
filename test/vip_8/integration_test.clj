@@ -34,15 +34,15 @@
         (with-redefs [screen/clear (fn [] (swap! screen (fn [_] (into [] (repeat 32 (into [] (repeat 64 false)))))))
                       screen/is-on? (fn [x y] 
                                       (let [current-screen @screen]
-                                        (nth (nth current-screen x)
-                                             y)))
+                                        (nth (nth current-screen y)
+                                             x)))
                       screen/set (fn [x y on?] 
                                    (swap! screen 
                                           (fn [v] 
                                             (assoc v
-                                                   x
-                                                   (assoc (nth v x)
-                                                          y
+                                                   y
+                                                   (assoc (nth v y)
+                                                          x
                                                           on?)))))
                       screen/width (fn [] 64)
                       screen/height (fn [] 32)]
@@ -76,7 +76,7 @@
                 (loop [x 12
                        y 8]
                   (when (< y 0xf)
-                    (let [actual (nth (nth result-screen x) y)]
+                    (let [actual (nth (nth result-screen y) x)]
                       (is actual)
                       (when actual
                         (recur (if (< x 19) (inc x) 12)
@@ -99,11 +99,13 @@
               (is (= (:pc registers) 0x210))
               (loop [x 21
                      y 8]
-                (let [actual (nth (nth result-screen x) y)]
+                (let [actual (nth (nth result-screen y) x)]
                   (when (< y 0xf)
                     (is actual)
                     (when actual
                       (recur (if (< x 28) (inc x) 21)
-                             (if (= x 28) (inc y) y)))))))))))))
+                             (if (= x 28) (inc y) y))))))))
+          (testing "Something"
+            (let [status (run-instructions initial-status 11)])))))))
 
 
