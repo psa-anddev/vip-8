@@ -12,3 +12,7 @@
 (defn set 
   "Sets a pixel of the screen"
   [x y on?])
+
+(defn width [])
+
+(defn height [])

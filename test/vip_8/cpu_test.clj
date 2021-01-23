@@ -84,7 +84,23 @@
           :y 0xA
           :n 0xF
           :nn 0x0
-          :nnn 0x0})))
+          :nnn 0x0}))
+  (is (= (read-instruction {:memory [0x71 0x00]
+                            :registers {:pc 0x000}})
+         {:instruction 0x7
+          :x 1
+          :y 0x0
+          :n 0x0
+          :nn 0x00
+          :nnn 0x000}))
+  (is (= (read-instruction {:memory [0x7A 0x9D]
+                            :registers {:pc 0x000}})
+         {:instruction 0x7
+          :x 0xA
+          :y 0x0
+          :n 0x0
+          :nn 0x9D
+          :nnn 0x000})))
 
 (deftest execute-test
   (testing "instruction 0x00e0 clears the screen"
@@ -158,90 +174,110 @@
             registers (:registers actual)]
         (is (= (:v3 registers) 0x0))
         (is (= (:vD registers) 0xFF)))))
+  (testing "instruction 0x7 adds nn to whatever is in vX and sets it to vX"
+    (let [actual (execute {:instruction 0x7
+                           :x 0x2
+                           :nn 0x20}
+                          {:registers {:v2 0xFA
+                                       :v7 0x10}})]
+      (is (= (:v7 (:registers actual))
+             0x10))
+      (is (= (:v2 (:registers actual))
+             0x1a)))
+    (let [actual (execute {:instruction 0x7
+                           :x 0x7
+                           :nn 0x03}
+                          {:registers {:v2 0xFA
+                                       :v7 0x02}})
+          registers (:registers actual)]
+      (is (= (:v2 registers) 0xFA))
+      (is (= (:v7 registers) 0x05))))
   (testing "instruction 0xD draws a N-pixel tall sprite at coordinate given by vX and vY"
     (let [screen (atom #{})]
-      (with-redefs [screen/is-on? (fn [x y] (not (empty? (filter (fn [[ax ay]] 
-                                                                   (and (= x ax)
-                                                                        (= y ay)))
-                                                                 @screen))))
-                    screen/set (fn [x y on?]
-                                 (swap! screen
-                                        (fn [v]
-                                          (if on?
-                                            (into #{} (cons (list x y) v))
-                                            (into #{} (filter #(not= % '(x y)) v))))))]
+      (with-redefs [screen/is-on? 
+                    (fn [x y] 
+                      (contains? @screen (list x y)))
+                    screen/set 
+                    (fn [x y on?]
+                      (swap! screen
+                             (fn [v]
+                               (if on?
+                                 (into #{} (cons (list x y) v))
+                                 (into #{} (filter #(not= % (list x y)) v))))))
+                    screen/width (fn [] 64)
+                    screen/height (fn [] 32)]
         (let [result
               (execute {:instruction 0xD
                         :x 0xF
                         :y 0x3
-                        :n 0x8}
+                        :n 0x1}
                        {:memory [0xFF]
                         :registers {:v3 0x0
-                                    :vf 0x0
+                                    :vF 0x0
                                     :index 0x0
                                     :pc 0x0}})]
-          (is (= #{'(0x0 0x0)
-                   '(0x1 0x0)
-                   '(0x2 0x0)
-                   '(0x3 0x0)
-                   '(0x4 0x0)
-                   '(0x5 0x0)
-                   '(0x6 0x0)
-                   '(0x7 0x0)
-                   '(0x0 0x1)
-                   '(0x1 0x1)
-                   '(0x2 0x1)
-                   '(0x3 0x1)
-                   '(0x4 0x1)
-                   '(0x5 0x1)
-                   '(0x6 0x1)
-                   '(0x7 0x1)
-                   '(0x0 0x2)
-                   '(0x1 0x2)
-                   '(0x2 0x2)
-                   '(0x3 0x2)
-                   '(0x4 0x2)
-                   '(0x5 0x2)
-                   '(0x6 0x2)
-                   '(0x7 0x2)
-                   '(0x0 0x3)
-                   '(0x1 0x3)
-                   '(0x2 0x3)
-                   '(0x3 0x3)
-                   '(0x4 0x3)
-                   '(0x5 0x3)
-                   '(0x6 0x3)
-                   '(0x7 0x3)
-                   '(0x0 0x4)
-                   '(0x1 0x4)
-                   '(0x2 0x4)
-                   '(0x3 0x4)
-                   '(0x4 0x4)
-                   '(0x5 0x4)
-                   '(0x6 0x4)
-                   '(0x7 0x4)
-                   '(0x0 0x5)
-                   '(0x1 0x5)
-                   '(0x2 0x5)
-                   '(0x3 0x5)
-                   '(0x4 0x5)
-                   '(0x5 0x5)
-                   '(0x6 0x5)
-                   '(0x7 0x5)
-                   '(0x0 0x6)
-                   '(0x1 0x6)
-                   '(0x2 0x6)
-                   '(0x3 0x6)
-                   '(0x4 0x6)
-                   '(0x5 0x6)
-                   '(0x6 0x6)
-                   '(0x7 0x6)
-                   '(0x0 0x7)
-                   '(0x1 0x7)
-                   '(0x2 0x7)
-                   '(0x3 0x7)
-                   '(0x4 0x7)
-                   '(0x5 0x7)
-                   '(0x6 0x7)
-                   '(0x7 0x7)}
-                 @screen)))))))
+          (loop [x 0x0]
+            (when (< x 0x8)
+              (is (contains? @screen (list x 0x0)))
+              (recur (inc x))))
+          (is (= (count @screen) 8))
+          (is (= (:vF (:registers result))
+                 0x0)))
+        (let [result
+              (execute {:instruction 0xD
+                        :x 0x2
+                        :y 0xB
+                        :n 0x1}
+                       {:memory [0xFF]
+                        :registers {:v2 0xA
+                                    :vB 0xC
+                                    :vF 0x0
+                                    :index 0x0
+                                    :pc 0x0}})
+              current-screen @screen]
+          (loop [x 0xA]
+            (when (< x (+ 0xA 0x8))
+              (is (contains? current-screen (list x 0xC)))
+              (recur (inc x))))
+          (is (= (count current-screen) 16))
+          (is (= (:vF (:registers result))
+                 0x0)))
+        (let [result
+              (execute {:instruction 0xD
+                        :x 0x5
+                        :y 0xA
+                        :n 0x8}
+                       {:memory [0xFF 0xF8]
+                        :registers {:v5 0x7
+                                    :vA 0x0
+                                    :vF 0x0
+                                    :index 0x1
+                                    :pc 0x0}})]
+          (is (not (contains? @screen (list 0x7 0x0))))
+          (is (contains? @screen (list 0x8 0x0)))
+          (is (contains? @screen (list 0x9 0x0)))
+          (is (contains? @screen (list 0xA 0x0)))
+          (is (contains? @screen (list 0xB 0x0)))
+          (is (not (contains? @screen (list 0xC 0x0))))
+          (is (= (:vF (:registers result))
+                 0x1)))
+        (swap! screen (fn [_] #{}))
+        (let [result 
+              (execute {:instruction 0xD
+                        :x 0x0
+                        :y 0x1
+                        :n 0xF}
+                       {:memory [0xFF]
+                        :registers {:v0 0x7c
+                                    :v1 0x3e
+                                    :vF 0x1
+                                    :index 0x0
+                                    :pc 0x0}})]
+          (is (= (:vF (:registers result)) 0x0))
+          (is (contains? @screen (list 0x3c 0x1e)))
+          (is (= 0
+                 (count
+                 (filter (fn [[x y]]
+                           (or (not (<= 0 x 63))
+                               (not (<= 0 y 31))))
+                         @screen)))))))))

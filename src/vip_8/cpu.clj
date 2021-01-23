@@ -21,7 +21,8 @@
        :n 0
        :nn 0
        :nnn 0}
-      (= opcode 0x6)
+      (or (= opcode 0x6)
+          (= opcode 0x7))
       {:instruction opcode
        :x (bit-and first-byte 0xF)
        :y 0
@@ -54,6 +55,9 @@
     (screen/clear)
     state)
 
+  (defn get-register-key [data-byte]
+    (keyword (str "v" (string/upper-case (format "%x" data-byte)))))
+
   (defn set-register [status register value]
     (assoc status
            :registers
@@ -63,7 +67,7 @@
 
   (defn set-v-register []
     (set-register state
-                  (keyword (str "v" (string/upper-case (format "%x" (:x instruction)))))
+                  (get-register-key (:x instruction))
                   (:nn instruction)))
 
   (defn set-index-register []
@@ -73,21 +77,54 @@
                     new-value)))
 
   (defn draw-sprite []
-    (let [height (:n instruction)]
-      (loop [x 0
-             y 0]
-        (if (< y height)
-          (do (screen/set x y true)
-              (recur (if (< x 7) (inc x) 0)
-                     (if (= x 7) (inc y) y)))
-          state))))
+    (let [height (:n instruction)
+          registers (:registers state)
+          start-x (mod (registers (get-register-key (:x instruction)))
+                       (screen/width))
+          start-y (mod (registers (get-register-key (:y instruction)))
+                       (screen/height))
+          sprite-bits (nth (:memory state) 
+                           (:index registers))]
+      (loop [current-bit 7
+             current-row 0 
+             s (set-register state :vF 0x0)]
+        (if (and (< current-row height)
+                 (>= current-bit 0))
+          (let [x (+ start-x (- 7 current-bit))
+                y (+ start-y current-row)
+                was-on? (screen/is-on? x y)
+                in-range? (and (<= 0 x 63)
+                               (<= 0 y 31))
+                should-flip? (bit-test sprite-bits current-bit)]
+            (when (and in-range? should-flip?)
+              (screen/set x y (not was-on?)))
+            (recur (if (> current-bit 0) (dec current-bit) 7)
+                   (if (= current-bit 0) (inc current-row) current-row)
+                   (if (and (= (:vF (:registers s))
+                               0x0)
+                            in-range?
+                            should-flip?
+                            was-on?)
+                     (set-register s :vF 0x1)
+                     s)))
+          s))))
+  (defn add-to-v-register []
+    (let [reg-keyword (get-register-key (:x instruction)) 
+          old-value (reg-keyword (:registers state))
+          added-value (:nn instruction)
+          set-value (bit-and  (+ old-value added-value)
+                             0xFF)]
+      (set-register state
+                    reg-keyword
+                    set-value))) 
 
   (let [instructions {:e0 clear-screen
                       :6 set-v-register
+                      :7 add-to-v-register
                       :a set-index-register
                       :d draw-sprite}
         op-keyword (keyword (format "%x" (:instruction instruction)))]
-    (if (nil? op-keyword)
-      (throw "Instruction ")
+    (if (nil? (op-keyword instructions))
+      (throw (Exception. (str  "Instruction " (format "%x" (:instruction instruction)) " not implemented.")))
       ((op-keyword instructions)))))
 
