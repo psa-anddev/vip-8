@@ -280,4 +280,15 @@
                  (filter (fn [[x y]]
                            (or (not (<= 0 x 63))
                                (not (<= 0 y 31))))
-                         @screen)))))))))
+                         @screen))))))))
+(testing "Instruction 1 sets the program counter to the given address"
+  (let [result (execute {:instruction 0x1
+                         :nnn 0xABC}
+                        {:registers {:pc 0x0}})]
+    (is (= (:pc (:registers result))
+           0xABC)))
+  (let [result (execute {:instruction 0x1
+                         :nnn 0xF18}
+                        {:registers {:pc 0x0}})]
+    (is (= (:pc (:registers result))
+           0xF18)))))

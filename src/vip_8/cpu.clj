@@ -46,7 +46,7 @@
        :nn 0x0
        :nnn 0x0}
       :else
-      (throw (Exception. (str  "Instruction " (format "0x%x" opcode) " not implemented"))))))
+      (throw (Exception. (str  "Instruction " (format "0x%x" opcode) " not implemented (Full instruction: " (format "%x" i) ")"))))))
 
 (defn execute 
   "Executes a given instruction"
@@ -117,14 +117,19 @@
       (set-register state
                     reg-keyword
                     set-value))) 
+  (defn set-program-counter []
+    (set-register state
+                  :pc
+                  (:nnn instruction)))
 
   (let [instructions {:e0 clear-screen
                       :6 set-v-register
                       :7 add-to-v-register
                       :a set-index-register
-                      :d draw-sprite}
+                      :d draw-sprite
+                      :1 set-program-counter}
         op-keyword (keyword (format "%x" (:instruction instruction)))]
     (if (nil? (op-keyword instructions))
-      (throw (Exception. (str  "Instruction " (format "%x" (:instruction instruction)) " not implemented.")))
+      (throw (Exception. (str  "Instruction " (format "%x" (:instruction instruction)) " not implemented. (Full instruction: " instruction ")")))
       ((op-keyword instructions)))))
 
