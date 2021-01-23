@@ -105,7 +105,7 @@
                     (when actual
                       (recur (if (< x 28) (inc x) 21)
                              (if (= x 28) (inc y) y))))))))
-          (testing "Something"
+          (testing "Application jumps to address 0x228"
             (let [status (run-instructions initial-status 21)]
               (is (= (:pc (:registers status))
                      0x228)))))))))
