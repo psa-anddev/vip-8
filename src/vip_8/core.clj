@@ -64,3 +64,11 @@
                   (+ (:pc (:registers prev-status)) 2)))]
     (cpu/execute instruction 
                  after-reading-status)))
+
+(defn -main [& args]
+  (screen/load-window)
+  (loop [status (load-rom "./roms/ibm-logo.ch8")
+         inst-counter 20]
+    (when (> inst-counter 0)
+      (recur (step status)
+             (dec inst-counter)))))

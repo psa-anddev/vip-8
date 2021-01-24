@@ -247,7 +247,7 @@
                         :x 0x5
                         :y 0xA
                         :n 0x8}
-                       {:memory [0xFF 0xF8]
+                       {:memory [0xFF 0xF8 0xF8 0xF8 0xF8 0xF8 0xF8 0xF8 0xF8 0xF8]
                         :registers {:v5 0x7
                                     :vA 0x0
                                     :vF 0x0
@@ -264,10 +264,29 @@
         (swap! screen (fn [_] #{}))
         (let [result 
               (execute {:instruction 0xD
+                        :x 0x7
+                        :y 0xD
+                        :n 0x3}
+                       {:memory [2r10000000
+                                 2r01000000
+                                 2r00100001]
+                        :registers {:v7 0x3
+                                    :vD 0x5
+                                    :index 0x0}})
+              result-screen @screen]
+          (is (= (:vF (:registers result)) 0))
+          (is (= (count result-screen) 4))
+          (is (contains? result-screen (list 3 5)))
+          (is (contains? result-screen (list 4 6)))
+          (is (contains? result-screen (list 5 7)))
+          (is (contains? result-screen (list 10 7))))
+        (swap! screen (fn [_] #{}))
+        (let [result 
+              (execute {:instruction 0xD
                         :x 0x0
                         :y 0x1
                         :n 0xF}
-                       {:memory [0xFF]
+                       {:memory [0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF]
                         :registers {:v0 0x7c
                                     :v1 0x3e
                                     :vF 0x1

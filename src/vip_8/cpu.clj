@@ -82,16 +82,16 @@
           start-x (mod (registers (get-register-key (:x instruction)))
                        (screen/width))
           start-y (mod (registers (get-register-key (:y instruction)))
-                       (screen/height))
-          sprite-bits (nth (:memory state) 
-                           (:index registers))]
+                       (screen/height))]
       (loop [current-bit 7
              current-row 0 
-             s (set-register state :vF 0x0)]
+             s (set-register state :vF 0x0)
+             byt-addr (:index registers)]
         (if (and (< current-row height)
                  (>= current-bit 0))
           (let [x (+ start-x (- 7 current-bit))
                 y (+ start-y current-row)
+                sprite-bits (nth (:memory state) byt-addr)
                 was-on? (screen/is-on? x y)
                 in-range? (and (<= 0 x 63)
                                (<= 0 y 31))
@@ -106,7 +106,8 @@
                             should-flip?
                             was-on?)
                      (set-register s :vF 0x1)
-                     s)))
+                     s)
+                   (if (> current-bit 0) byt-addr (inc byt-addr))))
           s))))
   (defn add-to-v-register []
     (let [reg-keyword (get-register-key (:x instruction)) 
