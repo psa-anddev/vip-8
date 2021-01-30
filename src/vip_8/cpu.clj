@@ -206,6 +206,11 @@
                       x-reg-key
                       (bit-or (registers x-reg-key)
                               (registers y-reg-key)))
+        (= operation 2)
+        (set-register state
+                      x-reg-key
+                      (bit-and (registers x-reg-key)
+                               (registers y-reg-key)))
         :else (throw (Exception. (str "Logical operation " operation " not implemented. (Full instruction: " instruction ")"))))))
 
   (let [instructions {:e0 clear-screen

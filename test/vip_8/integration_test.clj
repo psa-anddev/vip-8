@@ -282,5 +282,10 @@
         (let [result (run-instructions status 88)
               registers (:registers result)]
           (is (= (:vB registers) 0xB))
-          (is (= (:v7 registers) 0x2B)))))))
+          (is (= (:v7 registers) 0x2B))))
+      (testing "instruction 0x8762 sets v7 to the bitwise and of v7 and v6 leaving v6 unaffected"
+        (let [result (run-instructions status 100)
+              registers (:registers result)]
+          (is (= (:v6 registers) 0x78))
+          (is (= (:v7 registers) 0x18)))))))
 

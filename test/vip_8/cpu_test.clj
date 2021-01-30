@@ -463,4 +463,32 @@
                                     :v3 0x1}})
         registers (:registers result)]
     (is (= (:v1 registers) 0x1))
-    (is (= (:v3 registers) 0x1)))))
+    (is (= (:v3 registers) 0x1))))
+(testing "instruction 0x8XY2 sets vX to the bitwise and of vX and vY leaving vY unaffected"
+  (let [result (execute {:instruction 0x8
+                         :x 0xA
+                         :y 0xB
+                         :n 0x2}
+                        {:registers {:vA 0x0
+                                     :vB 0x0}})
+        registers (:registers result)]
+    (is (= (:vB registers) 0x0))
+    (is (= (:vA registers) 0x0)))
+  (let [result (execute {:instruction 0x8
+                         :x 0x3
+                         :y 0x5
+                         :n 0x2}
+                        {:registers {:v3 0x0
+                                     :v5 0x1}})
+        registers (:registers result)]
+    (is (= (:v3 registers) 0x0))
+    (is (= (:v5 registers) 0x1)))
+  (let [result (execute {:instruction 0x8
+                         :x 0x7
+                         :y 0x2
+                         :n 0x2}
+                        {:registers {:v7 0x1
+                                     :v2 0x0}})
+        registers (:registers result)]
+    (is (= (:v7 registers) 0x0))
+    (is (= (:v2 registers) 0x0)))))
