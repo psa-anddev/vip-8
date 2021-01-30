@@ -52,7 +52,15 @@
             :y 0x0
             :n 0x0
             :nn 0x0
-            :nnn 0x10B})))
+            :nnn 0x10B}))
+    (is (= (read-instruction {:memory [0x31 0xAB]
+                              :registers {:pc 0x0}})
+           {:instruction 0x3
+            :x 0x1
+            :y 0x0
+            :n 0x0
+            :nn 0xAB
+            :nnn 0x0})))
   (is (= (read-instruction {:memory [0x1F 0x8A 0xA1 0x0B 0x60 0x45]
                             :registers {:pc 0x004}})
          {:instruction 0x6
@@ -310,4 +318,20 @@
                          :nnn 0xF18}
                         {:registers {:pc 0x0}})]
     (is (= (:pc (:registers result))
-           0xF18)))))
+           0xF18))))
+(testing "Instruction 0x3 jumps an instruction if the given register stores the value in the instruction"
+  (let [result (execute {:instruction 0x3
+                         :x 0x3
+                         :nn 0x1A}
+                        {:registers {:pc 0x2
+                                     :v3 0x90}})]
+    (is (= (:pc (:registers result))
+           0x2)))
+  (let [result (execute {:instruction 0x3
+                         :x 0x4
+                         :nn 0x3B}
+                        {:registers {:pc 0x2
+                                     :v4 0x3B
+                                     :v3 0x90}})]
+    (is (= (:pc (:registers result))
+           0x4)))))

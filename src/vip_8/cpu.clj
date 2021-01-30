@@ -22,7 +22,8 @@
        :nn 0
        :nnn 0}
       (or (= opcode 0x6)
-          (= opcode 0x7))
+          (= opcode 0x7)
+          (= opcode 0x3))
       {:instruction opcode
        :x (bit-and first-byte 0xF)
        :y 0
@@ -118,12 +119,24 @@
       (set-register state
                     reg-keyword
                     set-value))) 
+
   (defn set-program-counter []
     (set-register state
                   :pc
                   (:nnn instruction)))
 
+  (defn jump-equal []
+    (let [registers (:registers state)
+          new-counter (+ (:pc registers) 2)]
+      (if (= (registers (get-register-key (:x instruction)))
+             (:nn instruction))
+        (set-register state
+                      :pc
+                      new-counter)
+        state)))
+
   (let [instructions {:e0 clear-screen
+                      :3 jump-equal
                       :6 set-v-register
                       :7 add-to-v-register
                       :a set-index-register
