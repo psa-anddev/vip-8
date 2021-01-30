@@ -217,6 +217,17 @@
                       (bit-xor (registers x-reg-key)
                                (registers y-reg-key)))
         
+        (= operation 4)
+        (let [raw-addition (+ (registers x-reg-key)
+                              (registers y-reg-key))
+              wrapped-addition (bit-and raw-addition
+                                        0xFF)
+              carry (if (> raw-addition 0xFF) 0x1 0x0)]
+        (set-register (set-register state
+                                    :vF
+                                    carry)
+                      x-reg-key
+                      wrapped-addition))
         :else (throw (Exception. (str "Logical operation " operation " not implemented. (Full instruction: " instruction ")"))))))
 
   (let [instructions {:e0 clear-screen

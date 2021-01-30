@@ -291,5 +291,11 @@
       (testing "instruction 0x8763 sets v7 to the bitwise xor of v7 and v6 leaving v6 unaffected"
         (let [result (run-instructions status 112)
               registers (:registers result)]
-          (is (= (:v7 registers) 0x67)))))))
+          (is (= (:v7 registers) 0x67))))
+      (testing "instruction 0x8764 sets v7 to the addition of v7 and v6 with carry in the vF register leaving v6 unaffected"
+        (let [result (run-instructions status 124)
+              registers (:registers result)]
+          (is (= (:v7 registers) 0x18))
+          (is (= (:v6 registers) 0x8C))
+          (is (= (:vF registers) 0x1)))))))
 

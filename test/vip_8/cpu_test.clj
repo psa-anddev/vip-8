@@ -510,4 +510,38 @@
                                      :v8 0x1}})
         registers (:registers result)]
     (is (= (:v3 registers) 0x0))
-    (is (= (:v8 registers) 0x1)))))
+    (is (= (:v8 registers) 0x1))))
+(testing "instruction 0x8XY4 adds with carry"
+  (let [result (execute {:instruction 0x8
+                         :x 0x3
+                         :y 0x5
+                         :n 4}
+                        {:registers {:v3 0x20
+                                     :v5 0x30
+                                     :vF 0x0}})
+        registers (:registers result)]
+    (is (= (:v3 registers) 0x50))
+    (is (= (:v5 registers) 0x30))
+    (is (= (:vF registers) 0x0)))
+  (let [result (execute {:instruction 0x8
+                         :x 0xA
+                         :y 0xB
+                         :n 4}
+                        {:registers {:vA 0x30
+                                     :vB 0x40
+                                     :vF 0x1}})
+        registers (:registers result)]
+    (is (= (:vA registers) 0x70))
+    (is (= (:vB registers) 0x40))
+    (is (= (:vF registers) 0x0)))
+  (let [result (execute {:instruction 0x8
+                         :x 0x2
+                         :y 0x6
+                         :n 4}
+                        {:registers {:v2 0xFF
+                                     :v6 0x01
+                                     :vF 0x0}})
+        registers (:registers result)]
+    (is (= (:v2 registers) 0x00))
+    (is (= (:v6 registers) 0x01))
+    (is (= (:vF registers) 0x1)))))
