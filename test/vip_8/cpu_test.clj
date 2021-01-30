@@ -124,6 +124,14 @@
         :y 0xA
         :n 0
         :nn 0
+        :nnn 0}))
+(is (= (read-instruction {:memory [0x9B 0xF0]
+                          :registers {:pc 0x0}})
+       {:instruction 0x9
+        :x 0xB
+        :y 0xF
+        :n 0
+        :nn 0
         :nnn 0}))))
 
 (deftest execute-test
@@ -385,4 +393,21 @@
                                      :vA 0x20
                                      :v8 0x20}})]
     (is (= (:pc (:registers result))
-           0x202)))))
+           0x202))))
+(testing "Instruction 0x9 jumps an instruction if the given registers don't contain the same value"
+  (let [result (execute {:instruction 0x9
+                         :x 0x4
+                         :y 0x7}
+                        {:registers {:v4 0x1
+                                     :v7 0x3
+                                     :pc 0x220}})]
+    (is (= (:pc (:registers result))
+           0x222)))
+  (let [result (execute {:instruction 0x9
+                         :x 3
+                         :y 0xF}
+                        {:registers {:v3 0x10
+                                     :vF 0x10
+                                     :pc 0x230}})]
+    (is (= (:pc (:registers result))
+           0x230)))))

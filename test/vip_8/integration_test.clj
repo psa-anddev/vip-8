@@ -256,5 +256,10 @@
       (testing "0x5 will not jump since registers v5 and v6 are not equal"
         (let [result (run-instructions status 30)]
           (is (= (:pc (:registers result))
-                 0x28A)))))))
+                 0x28A))))
+      (testing "0x9 will not jump since the registers v5 and v6 are equal"
+        (let [result (run-instructions status 49)
+              registers (:registers result)]
+          (is (= (:pc registers)
+                 0x2B0)))))))
 
