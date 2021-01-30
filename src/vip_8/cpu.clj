@@ -181,7 +181,17 @@
         :pc
         (:nnn instruction))))
 
+  (defn return-from-subroutine []
+    (let [stack (:stack state)]
+      (assoc 
+        (set-register state
+                      :pc
+                      (first stack))
+        :stack
+        (rest stack))))
+
   (let [instructions {:e0 clear-screen
+                      :ee return-from-subroutine
                       :2 jump-to-subroutine
                       :3 jump-equal
                       :4 jump-not-eual

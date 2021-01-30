@@ -267,5 +267,10 @@
           (is (= (:stack result)
                  [0x2C0]))
           (is (= (:pc (:registers result))
-                 0x242)))))))
+                 0x242))))
+      (testing "Instruction 0x00EE returns from subroutine"
+        (let [result (run-instructions status 60)]
+          (is (= (:pc (:registers result))
+                 0x2C0))
+          (is (empty? (:stack result))))))))
 

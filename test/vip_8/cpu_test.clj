@@ -419,4 +419,12 @@
     (is (= (:stack result)
            [0x508 0x406]))
     (is (= (:pc (:registers result))
-           0x218)))))
+           0x218))))
+(testing "Instruction 0x00EE returns from a subroutine"
+  (let [result (execute {:instruction 0x00EE}
+                        {:registers {:pc 0x670}
+                         :stack [0x340 0x407]})]
+    (is (= (:pc (:registers result))
+           0x340))
+    (is (= (:stack result)
+           [0x407])))))
