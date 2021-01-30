@@ -410,4 +410,13 @@
                                      :vF 0x10
                                      :pc 0x230}})]
     (is (= (:pc (:registers result))
-           0x230)))))
+           0x230))))
+(testing "Instruction 0x2 jumps to subroutine"
+  (let [result (execute {:instruction 0x2
+                         :nnn 0x218}
+                        {:registers {:pc 0x508}
+                         :stack [0x406]})]
+    (is (= (:stack result)
+           [0x508 0x406]))
+    (is (= (:pc (:registers result))
+           0x218)))))

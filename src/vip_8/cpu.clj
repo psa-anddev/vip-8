@@ -172,7 +172,17 @@
                       new-counter)
         state)))
 
+  (defn jump-to-subroutine []
+    (let [stack (:stack state)]
+      (set-register 
+        (assoc state
+               :stack
+               (cons (:pc (:registers state)) stack))
+        :pc
+        (:nnn instruction))))
+
   (let [instructions {:e0 clear-screen
+                      :2 jump-to-subroutine
                       :3 jump-equal
                       :4 jump-not-eual
                       :5 jump-equal-registers

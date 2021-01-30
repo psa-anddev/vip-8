@@ -261,5 +261,11 @@
         (let [result (run-instructions status 49)
               registers (:registers result)]
           (is (= (:pc registers)
-                 0x2B0)))))))
+                 0x2B0))))
+      (testing "instruction 0x2 jumps to subroutine in address 0x242"
+        (let [result (run-instructions status 57)]
+          (is (= (:stack result)
+                 [0x2C0]))
+          (is (= (:pc (:registers result))
+                 0x242)))))))
 
