@@ -132,7 +132,15 @@
         :y 0xF
         :n 0
         :nn 0
-        :nnn 0}))))
+        :nnn 0}))
+(is (= (read-instruction {:memory [0x8A 0xB3]
+                          :registers {:pc 0x0}})
+       {:instruction 0x8
+        :x 0xA
+        :y 0xB
+        :n 0x3
+        :nn 0x0
+        :nnn 0x0}))))
 
 (deftest execute-test
   (testing "instruction 0x00e0 clears the screen"
@@ -427,4 +435,13 @@
     (is (= (:pc (:registers result))
            0x340))
     (is (= (:stack result)
-           [0x407])))))
+           [0x407]))))
+(testing "instruction 0x8XY0 sets vX to the value of vY"
+  (let [result (execute {:instruction 0x8
+                         :x 0x1
+                         :y 0x2
+                         :n 0}
+                        {:registers {:v1 0x3
+                                     :v2 0x5}})
+        registers (:registers result)]
+    (is (= (:v1 registers) 0x5)))))

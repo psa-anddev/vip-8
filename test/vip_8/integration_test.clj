@@ -272,5 +272,10 @@
         (let [result (run-instructions status 60)]
           (is (= (:pc (:registers result))
                  0x2C0))
-          (is (empty? (:stack result))))))))
+          (is (empty? (:stack result)))))
+      (testing "instruction 0x8750 sets the value of v7 in the v5 register"
+        (let [result (run-instructions status 77)
+              registers (:register result)]
+          (is (= (:v5 registers)
+                 (:v7 registers))))))))
 

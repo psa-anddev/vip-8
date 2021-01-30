@@ -42,7 +42,8 @@
        :nnn (bit-and i 0xFFF)}
       (or (= opcode 0xD)
           (= opcode 0x5)
-          (= opcode 0x9))
+          (= opcode 0x9)
+          (= opcode 0x8))
       {:instruction opcode
        :x (bit-shift-right (bit-and i 0xF00) 0x8)
        :y (bit-shift-right (bit-and i 0xF0) 0x4)
@@ -190,6 +191,17 @@
         :stack
         (rest stack))))
 
+  (defn logical-operation []
+    (let [operation (:n instruction)
+          x-reg-key (get-register-key (:x instruction))
+          y-reg-key (get-register-key (:y instruction))
+          registers (:registers state)]
+      (if (= operation 0)
+        (set-register state
+                      x-reg-key
+                      (registers y-reg-key))
+        (throw (Exception. (str "Logical operation " operation " not implemented."))))))
+
   (let [instructions {:e0 clear-screen
                       :ee return-from-subroutine
                       :2 jump-to-subroutine
@@ -198,6 +210,7 @@
                       :5 jump-equal-registers
                       :6 set-v-register
                       :7 add-to-v-register
+                      :8 logical-operation
                       :9 jump-not-equal-registers
                       :a set-index-register
                       :d draw-sprite
