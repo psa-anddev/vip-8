@@ -287,5 +287,9 @@
         (let [result (run-instructions status 100)
               registers (:registers result)]
           (is (= (:v6 registers) 0x78))
-          (is (= (:v7 registers) 0x18)))))))
+          (is (= (:v7 registers) 0x18))))
+      (testing "instruction 0x8763 sets v7 to the bitwise xor of v7 and v6 leaving v6 unaffected"
+        (let [result (run-instructions status 112)
+              registers (:registers result)]
+          (is (= (:v7 registers) 0x67)))))))
 

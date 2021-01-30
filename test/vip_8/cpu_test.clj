@@ -491,4 +491,23 @@
                                      :v2 0x0}})
         registers (:registers result)]
     (is (= (:v7 registers) 0x0))
-    (is (= (:v2 registers) 0x0)))))
+    (is (= (:v2 registers) 0x0))))
+(testing "instruction 0x8XY3 stores in vX the bitwise xor of vX and vY leaving vY unaffected"
+  (let [result (execute {:instruction 0x8
+                         :x 0xA
+                         :y 0xB
+                         :n 0x3}
+                        {:registers {:vA 0x0
+                                     :vB 0x0}})
+        registers (:registers result)]
+    (is (= (:vA registers) 0x0))
+    (is (= (:vB registers) 0x0)))
+  (let [result (execute {:instruction 0x8
+                         :x 0x3
+                         :y 0x8
+                         :n 0x3}
+                        {:registers {:v3 0x1
+                                     :v8 0x1}})
+        registers (:registers result)]
+    (is (= (:v3 registers) 0x0))
+    (is (= (:v8 registers) 0x1)))))
