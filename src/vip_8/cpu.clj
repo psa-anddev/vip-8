@@ -40,7 +40,8 @@
        :n 0
        :nn 0
        :nnn (bit-and i 0xFFF)}
-      (= opcode 0xD)
+      (or (= opcode 0xD)
+          (= opcode 0x5))
       {:instruction opcode
        :x (bit-shift-right (bit-and i 0xF00) 0x8)
        :y (bit-shift-right (bit-and i 0xF0) 0x4)
@@ -146,9 +147,22 @@
                       new-counter)
         state)))
 
+  (defn jump-equal-registers []
+    (let [registers (:registers state)
+          x-reg-key (get-register-key (:x instruction))
+          y-reg-key (get-register-key (:y instruction))
+          new-counter (+ (:pc registers) 2)]
+      (if (= (registers x-reg-key)
+             (registers y-reg-key))
+        (set-register state
+                      :pc
+                      new-counter)
+        state)))
+
   (let [instructions {:e0 clear-screen
                       :3 jump-equal
                       :4 jump-not-eual
+                      :5 jump-equal-registers
                       :6 set-v-register
                       :7 add-to-v-register
                       :a set-index-register

@@ -68,55 +68,63 @@
             :y 0x0
             :n 0x0
             :nn 0x96
-            :nnn 0x0})))
-  (is (= (read-instruction {:memory [0x1F 0x8A 0xA1 0x0B 0x60 0x45]
-                            :registers {:pc 0x004}})
-         {:instruction 0x6
-          :x 0x0
-          :y 0x0
-          :n 0x0
-          :nn 0x45
-          :nnn 0x000}))
-  (is (= (read-instruction {:memory [0x63 0xCD]
-                            :registers {:pc 0x000}})
-         {:instruction 0x6
-          :x 0x3
-          :y 0x0
-          :n 0x0
-          :nn 0xCD
-          :nnn 0x000}))
-  (is (= (read-instruction {:memory [0xd0 0x12]
-                            :registers {:pc 0x000}})
-         {:instruction 0xd
-          :x 0x0
-          :y 0x1
-          :n 0x2
-          :nn 0x0
-          :nnn 0x0}))
-  (is (= (read-instruction {:memory [0xd3 0xAF]
-                            :registers {:pc 0x000}})
-         {:instruction 0xd
-          :x 0x3
-          :y 0xA
-          :n 0xF
-          :nn 0x0
-          :nnn 0x0}))
-  (is (= (read-instruction {:memory [0x71 0x00]
-                            :registers {:pc 0x000}})
-         {:instruction 0x7
-          :x 1
-          :y 0x0
-          :n 0x0
-          :nn 0x00
-          :nnn 0x000}))
-  (is (= (read-instruction {:memory [0x7A 0x9D]
-                            :registers {:pc 0x000}})
-         {:instruction 0x7
-          :x 0xA
-          :y 0x0
-          :n 0x0
-          :nn 0x9D
-          :nnn 0x000})))
+            :nnn 0x0}))
+    (is (= (read-instruction {:memory [0x1F 0x8A 0xA1 0x0B 0x60 0x45]
+                              :registers {:pc 0x004}})
+           {:instruction 0x6
+            :x 0x0
+            :y 0x0
+            :n 0x0
+            :nn 0x45
+            :nnn 0x000}))
+    (is (= (read-instruction {:memory [0x63 0xCD]
+                              :registers {:pc 0x000}})
+           {:instruction 0x6
+            :x 0x3
+            :y 0x0
+            :n 0x0
+            :nn 0xCD
+            :nnn 0x000}))
+    (is (= (read-instruction {:memory [0xd0 0x12]
+                              :registers {:pc 0x000}})
+           {:instruction 0xd
+            :x 0x0
+            :y 0x1
+            :n 0x2
+            :nn 0x0
+            :nnn 0x0}))
+    (is (= (read-instruction {:memory [0xd3 0xAF]
+                              :registers {:pc 0x000}})
+           {:instruction 0xd
+            :x 0x3
+            :y 0xA
+            :n 0xF
+            :nn 0x0
+            :nnn 0x0}))
+    (is (= (read-instruction {:memory [0x71 0x00]
+                              :registers {:pc 0x000}})
+           {:instruction 0x7
+            :x 1
+            :y 0x0
+            :n 0x0
+            :nn 0x00
+            :nnn 0x000}))
+(is (= (read-instruction {:memory [0x7A 0x9D]
+                          :registers {:pc 0x000}})
+       {:instruction 0x7
+        :x 0xA
+        :y 0x0
+        :n 0x0
+        :nn 0x9D
+        :nnn 0x000}))
+(is (= (read-instruction {:memory [0x51 0xA0]
+                          :registers {:pc 0x0}})
+       {:instruction 0x5
+        :x 0x1
+        :y 0xA
+        :n 0
+        :nn 0
+        :nnn 0}))))
 
 (deftest execute-test
   (testing "instruction 0x00e0 clears the screen"
@@ -357,5 +365,24 @@
                         {:registers {:pc 0x200
                                      :v2 0x20
                                      :vA 0x99}})]
+    (is (= (:pc (:registers result))
+           0x202))))
+(testing "Instruction 0x5 jumps an instruction if register x and y have the same value"
+  (let [result (execute {:instruction 0x5
+                         :x 0xA
+                         :y 0x8}
+                        {:registers {:pc 0x202
+                                    :vA 0x20
+                                    :v8 0x20}})]
+    (is (= (:pc (:registers result))
+           0x204)))
+  (let [result (execute {:instruction 0x5
+                         :x 0x2
+                         :y 0x5}
+                        {:registers {:pc 0x202
+                                     :v2 0x1
+                                     :v5 0xF
+                                     :vA 0x20
+                                     :v8 0x20}})]
     (is (= (:pc (:registers result))
            0x202)))))
