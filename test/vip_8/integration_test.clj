@@ -248,5 +248,9 @@
       (testing "0x3 will jump an instruction since v6 is equal to 0x2B"
         (let [result (run-instructions status 13)]
           (is (= (:pc (:registers result))
-                 0x268)))))))
+                 0x268))))
+      (testing "something"
+        (let [result (run-instructions status 21)]
+          (is (= (:pc (:registers result))
+                 0x278)))))))
 

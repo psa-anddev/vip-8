@@ -23,7 +23,8 @@
        :nnn 0}
       (or (= opcode 0x6)
           (= opcode 0x7)
-          (= opcode 0x3))
+          (= opcode 0x3)
+          (= opcode 0x4))
       {:instruction opcode
        :x (bit-and first-byte 0xF)
        :y 0
@@ -135,8 +136,19 @@
                       new-counter)
         state)))
 
+  (defn jump-not-eual []
+    (let [registers (:registers state)
+          new-counter (+ (:pc registers) 2)]
+      (if (not= (registers (get-register-key (:x instruction)))
+             (:nn instruction))
+        (set-register state
+                      :pc
+                      new-counter)
+        state)))
+
   (let [instructions {:e0 clear-screen
                       :3 jump-equal
+                      :4 jump-not-eual
                       :6 set-v-register
                       :7 add-to-v-register
                       :a set-index-register

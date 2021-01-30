@@ -60,6 +60,14 @@
             :y 0x0
             :n 0x0
             :nn 0xAB
+            :nnn 0x0}))
+    (is (= (read-instruction {:memory [0x4f 0x96]
+                              :registers {:pc 0x0}})
+           {:instruction 0x4
+            :x 0xF
+            :y 0x0
+            :n 0x0
+            :nn 0x96
             :nnn 0x0})))
   (is (= (read-instruction {:memory [0x1F 0x8A 0xA1 0x0B 0x60 0x45]
                             :registers {:pc 0x004}})
@@ -334,4 +342,20 @@
                                      :v4 0x3B
                                      :v3 0x90}})]
     (is (= (:pc (:registers result))
-           0x4)))))
+           0x4))))
+(testing "Instruction 0x4 jumps an instruction if the given register does not store the value in the instruction"
+  (let [result (execute {:instruction 0x4
+                         :x 0xA
+                         :nn 0x99}
+                        {:registers {:pc 0x200
+                                     :vA 0x99}})]
+    (is (= (:pc (:registers result))
+           0x200)))
+  (let [result (execute {:instruction 0x4
+                         :x 0x2
+                         :nn 0x12}
+                        {:registers {:pc 0x200
+                                     :v2 0x20
+                                     :vA 0x99}})]
+    (is (= (:pc (:registers result))
+           0x202)))))
