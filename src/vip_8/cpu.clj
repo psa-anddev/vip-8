@@ -196,11 +196,17 @@
           x-reg-key (get-register-key (:x instruction))
           y-reg-key (get-register-key (:y instruction))
           registers (:registers state)]
-      (if (= operation 0)
+      (cond 
+        (= operation 0) 
         (set-register state
                       x-reg-key
                       (registers y-reg-key))
-        (throw (Exception. (str "Logical operation " operation " not implemented."))))))
+        (= operation 1)
+        (set-register state
+                      x-reg-key
+                      (bit-or (registers x-reg-key)
+                              (registers y-reg-key)))
+        :else (throw (Exception. (str "Logical operation " operation " not implemented. (Full instruction: " instruction ")"))))))
 
   (let [instructions {:e0 clear-screen
                       :ee return-from-subroutine
