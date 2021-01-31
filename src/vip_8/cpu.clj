@@ -231,12 +231,19 @@
         (= operation 5)
         (let [minuend (registers x-reg-key)
               sustrahend (registers y-reg-key)]
+          (set-register 
+            (set-register state
+                          :vF
+                          (if (> minuend sustrahend) 0x1 0x0))
+            x-reg-key
+            (bit-and (- minuend sustrahend) 0xFF)))
+        (= operation 0xE)
         (set-register 
           (set-register state
-                        :vF
-                        (if (> minuend sustrahend) 0x1 0x0))
-          x-reg-key
-          (bit-and (- minuend sustrahend) 0xFF)))
+                        x-reg-key
+                        (bit-and (bit-shift-left (registers x-reg-key) 0x1) 0xFF))
+          :vF
+          (if (bit-test (registers x-reg-key) 0) 0x1 0x0))
         :else (throw (Exception. (str "Logical operation " operation " not implemented. (Full instruction: " instruction ")"))))))
 
   (let [instructions {:e0 clear-screen
