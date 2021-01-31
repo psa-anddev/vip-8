@@ -544,4 +544,25 @@
         registers (:registers result)]
     (is (= (:v2 registers) 0x00))
     (is (= (:v6 registers) 0x01))
-    (is (= (:vF registers) 0x1)))))
+    (is (= (:vF registers) 0x1))))
+(testing "instruction 0x8XY5 substracts vX - vY and puts the result in vX with carry"
+  (let [result (execute {:instruction 0x8
+                         :x 0x3
+                         :y 0xA
+                         :n 5}
+                        {:registers {:v3 0x10
+                                     :vA 0xE
+                                     :vF 0x0}})
+        registers (:registers result)]
+    (is (= (:vF registers) 0x1))
+    (is (= (:v3 registers) 0x2)))
+  (let [result (execute {:instruction 0x8
+                         :x 0xA
+                         :y 0xB
+                         :n 5}
+                        {:registers {:vA 0xE
+                                     :vB 0xF
+                                     :vF 0x0}})
+        registers (:registers result)]
+    (is (= (:vF registers) 0x0))
+    (is (= (:vA registers) 0xFF)))))

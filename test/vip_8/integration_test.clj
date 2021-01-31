@@ -297,5 +297,10 @@
               registers (:registers result)]
           (is (= (:v7 registers) 0x18))
           (is (= (:v6 registers) 0x8C))
-          (is (= (:vF registers) 0x1)))))))
+          (is (= (:vF registers) 0x1))))
+      (testing "instruction 0x8765 sets v7 to v7 - v6 with carry"
+        (let [result (run-instructions status 139)
+              registers (:registers result)]
+          (is (= (:vF registers) 0x0))
+          (is (= (:v7 registers) 0xEC)))))))
 

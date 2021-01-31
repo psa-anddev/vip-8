@@ -228,6 +228,15 @@
                                     carry)
                       x-reg-key
                       wrapped-addition))
+        (= operation 5)
+        (let [minuend (registers x-reg-key)
+              sustrahend (registers y-reg-key)]
+        (set-register 
+          (set-register state
+                        :vF
+                        (if (> minuend sustrahend) 0x1 0x0))
+          x-reg-key
+          (bit-and (- minuend sustrahend) 0xFF)))
         :else (throw (Exception. (str "Logical operation " operation " not implemented. (Full instruction: " instruction ")"))))))
 
   (let [instructions {:e0 clear-screen
