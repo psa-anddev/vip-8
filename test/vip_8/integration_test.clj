@@ -318,5 +318,9 @@
           (is (= (:v0 registers) 0x0))
           (is (= (:v1 registers) 0x30))
           (is (= (nth memory (:index registers)) 0x0))
-          (is (= (nth memory (inc (:index registers))) 0x30)))))))
+          (is (= (nth memory (inc (:index registers))) 0x30))))
+      (testing "instruction 0xF065 loads the value of the memory address stored in the index register and loads it into register v0"
+        (let [result (run-instructions status 175)
+              registers (:registers result)]
+          (is (= (:v0 registers) 0x30)))))))
 

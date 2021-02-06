@@ -628,7 +628,7 @@
     (is (= (:v1 registers) 0x10))
     (is (= (:vB registers) 0x1))
     (is (= (:vF registers) 0x0))))
-(testing "instruction 0xFX55 loads the values of the addresses starting from the one in the I register into v0 to vX"
+(testing "instruction 0xFX55 stores the values of registers v0 to vX into memory starting from the address in the index register"
   (let [result (execute {:instruction 0xF
                          :x 0x0
                          :nn 0x55}
@@ -679,4 +679,36 @@
     (is (= (nth memory 0x8) 0x2))
     (is (= (nth memory 0x9) 0xA))
     (is (= (nth memory 0xA) 0x1))
-    (is (= (nth memory 0xB) 0xA1)))))
+    (is (= (nth memory 0xB) 0xA1))))
+(testing "instruction 0xFX65 loads the values from memory starting at the address in the index register to registers v0 to vX"
+  (let [result (execute {:instruction 0xF
+                         :x 0x0
+                         :nn 0x65}
+                        {:memory [0xFA]
+                         :registers {:index 0x0
+                                     :v0 0x75}})
+        registers (:registers result)]
+    (is (= (:index registers) 0x0))
+    (is (= (:v0 registers) 0xFA)))
+  (let [result (execute {:instruction 0xF
+                         :x 0x5
+                         :nn 0x65}
+                        {:memory [0xAB 0xBA 0x10
+                                  0x11 0x20 0x21
+                                  0x30 0x31 0x40
+                                  0x41]
+                         :registers {:index 0x3
+                                     :v0 0x00
+                                     :v1 0x01
+                                     :v2 0x02
+                                     :v3 0x03
+                                     :v4 0x04
+                                     :v5 0x05}})
+        registers (:registers result)]
+    (is (= (:index registers) 0x3))
+    (is (= (:v0 registers) 0x11))
+    (is (= (:v1 registers) 0x20))
+    (is (= (:v2 registers) 0x21))
+    (is (= (:v3 registers) 0x30))
+    (is (= (:v4 registers) 0x31))
+    (is (= (:v5 registers) 0x40)))))

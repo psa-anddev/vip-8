@@ -256,7 +256,8 @@
         :else (throw (Exception. (str "Logical operation " operation " not implemented. (Full instruction: " instruction ")"))))))
   (defn timers-and-memory []
     (let [operation (:nn instruction)]
-      (if (= operation 0x55)
+      (cond
+        (= operation 0x55)
         (loop [reg 0
                partial-result state]
           (if (> reg (:x instruction))
@@ -269,6 +270,18 @@
                                     reg)
                                  ((:registers partial-result) 
                                   (get-register-key reg)))))))
+        (= operation 0x65)
+        (loop [reg 0
+               partial-result state]
+          (if (> reg (:x instruction))
+            partial-result
+            (recur (inc reg)
+                   (set-register partial-result
+                                 (get-register-key reg)
+                                 (nth (:memory partial-result)
+                                      (+ (:index (:registers partial-result))
+                                         reg))))))
+        :else
         (throw (Exception. (str "Timer and memory operation " (format "0x%x" operation) " not implemented. (Full instruction: " instruction ")"))))))
 
   (let [instructions {:e0 clear-screen
