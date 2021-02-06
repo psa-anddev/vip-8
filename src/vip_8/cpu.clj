@@ -237,6 +237,14 @@
                           (if (> minuend sustrahend) 0x1 0x0))
             x-reg-key
             (bit-and (- minuend sustrahend) 0xFF)))
+        (= operation 0x6)
+        (set-register 
+          (set-register state x-reg-key 
+                        (bit-shift-right 
+                          (registers x-reg-key)
+                          0x1))
+          :vF
+          (if (bit-test (registers x-reg-key) 0) 0x1 0x0))
         (= operation 0xE)
         (set-register 
           (set-register state

@@ -306,5 +306,9 @@
       (testing "instruction 0x866E shifts a bit to the left in register v6"
         (let [result (run-instructions status 150)
               registers (:registers result)]
-          (is (= (:v6 registers) 0xC0)))))))
+          (is (= (:v6 registers) 0xC0))))
+      (testing "instruction 0x8666 shifts a bit to the right in register v6"
+        (let [result (run-instructions status 161)
+              registers (:registers result)]
+          (is (= (:v6 registers) 0x7)))))))
 

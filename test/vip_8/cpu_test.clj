@@ -596,4 +596,27 @@
                                      :vF 0x0}})
         registers (:registers result)]
     (is (= (:vF registers) 0x1))
-    (is (= (:vA registers) 0xFE)))))
+    (is (= (:vA registers) 0xFE))))
+(testing "instruction 0x8XY6 shift bits to the right"
+  (let [result (execute {:instruction 0x8
+                         :x 0x1
+                         :y 0x2
+                         :n 0x6}
+                        {:registers {:v1 0x1
+                                     :v2 0xFF
+                                     :vF 0x0}})
+        registers (:registers result)]
+    (is (= (:v1 registers) 0x0))
+    (is (= (:vF registers) 0x1)))
+  (let [result (execute {:instruction 0x8
+                         :x 0xB
+                         :y 0x7
+                         :n 0x6}
+                        {:registers {:v1 0x10
+                                     :vB 0x2
+                                     :v7 0x1
+                                     :vF 0x0}})
+        registers (:registers result)]
+    (is (= (:v1 registers) 0x10))
+    (is (= (:vB registers) 0x1))
+    (is (= (:vF registers) 0x0)))))
