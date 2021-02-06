@@ -711,4 +711,25 @@
     (is (= (:v2 registers) 0x21))
     (is (= (:v3 registers) 0x30))
     (is (= (:v4 registers) 0x31))
-    (is (= (:v5 registers) 0x40)))))
+    (is (= (:v5 registers) 0x40))))
+(testing "instruction 0xFX33 stores decimal digits of vX in the address for the index register and the next 2"
+  (let [result (execute {:instruction 0xF
+                         :x 0x7
+                         :nn 0x33}
+                        {:registers {:index 0x0
+                                     :v7 0xFF}
+                         :memory [0x0 0x0 0x0]})
+        memory (:memory result)]
+    (is (= (first memory) 0x2))
+    (is (= (second memory) 0x5))
+    (is (= (nth memory 2) 0x5)))
+  (let [result (execute {:instruction 0xF
+                         :x 0x9
+                         :nn 0x33}
+                        {:memory (into [] (repeat 20 0x0))
+                         :registers {:v9 0x9c
+                                     :index 0x4}})
+        memory (:memory result)]
+    (is (= (nth memory 0x4) 0x1))
+    (is (= (nth memory 0x5) 0x5))
+    (is (= (nth memory 0x6) 0x6)))))

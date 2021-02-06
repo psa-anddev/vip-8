@@ -281,6 +281,18 @@
                                  (nth (:memory partial-result)
                                       (+ (:index (:registers partial-result))
                                          reg))))))
+        (= operation 0x33)
+        (let [memory (atom (:memory state))
+              registers (:registers state)
+              address (:index registers)
+              value (registers
+                     (get-register-key (:x instruction)))
+              v100th (int (/ value 100))
+              v10th (int (/ (- value (* v100th 100)) 10))]
+          (swap! memory #(assoc % address v100th))
+          (swap! memory #(assoc % (inc address) v10th))
+          (swap! memory #(assoc % (+ address 2) (rem value 10)))
+          (assoc state :memory @memory))
         :else
         (throw (Exception. (str "Timer and memory operation " (format "0x%x" operation) " not implemented. (Full instruction: " instruction ")"))))))
 
