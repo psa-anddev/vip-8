@@ -71,6 +71,13 @@
                   register
                   value)))
 
+  (defn set-memory-address [status address value]
+    (assoc status
+           :memory
+           (assoc (:memory status)
+                  address
+                  value)))
+
   (defn set-v-register []
     (set-register state
                   (get-register-key (:x instruction))
@@ -262,14 +269,14 @@
                partial-result state]
           (if (> reg (:x instruction))
             partial-result
-            (recur (inc reg)
-                   (assoc partial-result
-                          :memory
-                          (assoc (:memory partial-result)
-                                 (+ (:index (:registers partial-result))
-                                    reg)
-                                 ((:registers partial-result) 
-                                  (get-register-key reg)))))))
+            (let [address (+ (:index (:registers partial-result))
+                                      reg)
+                  value ((:registers partial-result) 
+                         (get-register-key reg))]
+              (recur (inc reg)
+                     (set-memory-address partial-result
+                                         address
+                                         value)))))
         (= operation 0x65)
         (loop [reg 0
                partial-result state]
@@ -282,17 +289,22 @@
                                       (+ (:index (:registers partial-result))
                                          reg))))))
         (= operation 0x33)
-        (let [memory (atom (:memory state))
-              registers (:registers state)
+        (let [registers (:registers state)
               address (:index registers)
               value (registers
                      (get-register-key (:x instruction)))
-              v100th (int (/ value 100))
-              v10th (int (/ (- value (* v100th 100)) 10))]
-          (swap! memory #(assoc % address v100th))
-          (swap! memory #(assoc % (inc address) v10th))
-          (swap! memory #(assoc % (+ address 2) (rem value 10)))
-          (assoc state :memory @memory))
+              cene (int (/ value 100))
+              dece (int (/ (- value (* cene 100)) 10))
+              unit (rem value 10)]
+          (set-memory-address
+            (set-memory-address
+              (set-memory-address state
+                                  address
+                                  cene)
+              (inc address)
+              dece)
+            (+ address 2)
+            unit))
         :else
         (throw (Exception. (str "Timer and memory operation " (format "0x%x" operation) " not implemented. (Full instruction: " instruction ")"))))))
 
