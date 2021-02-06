@@ -310,5 +310,13 @@
       (testing "instruction 0x8666 shifts a bit to the right in register v6"
         (let [result (run-instructions status 161)
               registers (:registers result)]
-          (is (= (:v6 registers) 0x7)))))))
+          (is (= (:v6 registers) 0x7))))
+      (testing "instruction 0xF155 stores the values in register v0 and v1 in memory starting from the address in the index register"
+        (let [result (run-instructions status 173)
+              registers (:registers result)
+              memory (:memory result)]
+          (is (= (:v0 registers) 0x0))
+          (is (= (:v1 registers) 0x30))
+          (is (= (nth memory (:index registers)) 0x0))
+          (is (= (nth memory (inc (:index registers))) 0x30)))))))
 

@@ -140,6 +140,14 @@
         :y 0xB
         :n 0x3
         :nn 0x0
+        :nnn 0x0}))
+(is (= (read-instruction {:memory [0xFA 0x17]
+                          :registers {:pc 0x0}})
+       {:instruction 0xF
+        :x 0xA
+        :y 0x0
+        :n 0x0
+        :nn 0x17
         :nnn 0x0}))))
 
 (deftest execute-test
@@ -619,4 +627,56 @@
         registers (:registers result)]
     (is (= (:v1 registers) 0x10))
     (is (= (:vB registers) 0x1))
-    (is (= (:vF registers) 0x0)))))
+    (is (= (:vF registers) 0x0))))
+(testing "instruction 0xFX55 loads the values of the addresses starting from the one in the I register into v0 to vX"
+  (let [result (execute {:instruction 0xF
+                         :x 0x0
+                         :nn 0x55}
+                        {:memory [0x7]
+                         :registers {:v0 0x0
+                                     :index 0x0}})
+        registers (:registers result)
+        memory (:memory result)]
+    (is (= (:index registers) 0x0))
+    (is (= (:v0 registers) 0x0))
+    (is (= (nth memory 0x0) 0x0)))
+  (let [result (execute {:instruction 0xF
+                         :x 0x0
+                         :nn 0x55}
+                        {:memory [0xA 0x5]
+                         :registers {:v0 0xA
+                                     :index 0x1}})
+        registers (:registers result)
+        memory (:memory result)]
+    (is (= (:index registers) 0x1))
+    (is (= (:v0 registers) 0xA))
+    (is (= (nth memory 0x1) 0xA)))
+  (let [result (execute {:instruction 0xF
+                         :x 0x5
+                         :nn 0x55}
+                        {:memory [0x0 0x0 0x2
+                                  0xA 0xB 0xC
+                                  0xF 0xE 0x8
+                                  0xFF 0x7A 0x1A]
+                         :registers {:index 0x6
+                                     :v0 0x1
+                                     :v1 0xB
+                                     :v2 0x2
+                                     :v3 0xA
+                                     :v4 0x1
+                                     :v5 0xA1}})
+        registers (:registers result)
+        memory (:memory result)]
+    (is (= (:index registers) 0x6))
+    (is (= (:v0 registers) 0x1))
+    (is (= (:v1 registers) 0xB))
+    (is (= (:v2 registers) 0x2))
+    (is (= (:v3 registers) 0xA))
+    (is (= (:v4 registers) 0x1))
+    (is (= (:v5 registers) 0xA1))
+    (is (= (nth memory 0x6) 0x1))
+    (is (= (nth memory 0x7) 0xB))
+    (is (= (nth memory 0x8) 0x2))
+    (is (= (nth memory 0x9) 0xA))
+    (is (= (nth memory 0xA) 0x1))
+    (is (= (nth memory 0xB) 0xA1)))))

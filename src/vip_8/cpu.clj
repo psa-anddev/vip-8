@@ -24,7 +24,8 @@
       (or (= opcode 0x6)
           (= opcode 0x7)
           (= opcode 0x3)
-          (= opcode 0x4))
+          (= opcode 0x4)
+          (= opcode 0xF))
       {:instruction opcode
        :x (bit-and first-byte 0xF)
        :y 0
@@ -253,6 +254,22 @@
           :vF
           (if (bit-test (registers x-reg-key) 0) 0x1 0x0))
         :else (throw (Exception. (str "Logical operation " operation " not implemented. (Full instruction: " instruction ")"))))))
+  (defn timers-and-memory []
+    (let [operation (:nn instruction)]
+      (if (= operation 0x55)
+        (loop [reg 0
+               partial-result state]
+          (if (> reg (:x instruction))
+            partial-result
+            (recur (inc reg)
+                   (assoc partial-result
+                          :memory
+                          (assoc (:memory partial-result)
+                                 (+ (:index (:registers partial-result))
+                                    reg)
+                                 ((:registers partial-result) 
+                                  (get-register-key reg)))))))
+        (throw (Exception. (str "Timer and memory operation " (format "0x%x" operation) " not implemented. (Full instruction: " instruction ")"))))))
 
   (let [instructions {:e0 clear-screen
                       :ee return-from-subroutine
@@ -266,6 +283,7 @@
                       :9 jump-not-equal-registers
                       :a set-index-register
                       :d draw-sprite
+                      :f timers-and-memory
                       :1 set-program-counter}
         op-keyword (keyword (format "%x" (:instruction instruction)))]
     (if (nil? (op-keyword instructions))
