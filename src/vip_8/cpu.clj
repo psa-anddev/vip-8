@@ -253,6 +253,16 @@
                           0x1))
           :vF
           (if (bit-test (registers x-reg-key) 0) 0x1 0x0))
+        (= operation 0x7)
+        (let [minuend (registers (get-register-key (:y instruction)))
+              sustrahend (registers (get-register-key (:x instruction)))
+              carry (if (> minuend sustrahend) 0x1 0x0)]
+          (set-register
+            (set-register state
+                          :vF
+                          carry)
+            (get-register-key (:x instruction))
+            (bit-and (- minuend sustrahend) 0xFF)))
         (= operation 0xE)
         (set-register 
           (set-register state

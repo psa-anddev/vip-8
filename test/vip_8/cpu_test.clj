@@ -732,4 +732,27 @@
         memory (:memory result)]
     (is (= (nth memory 0x4) 0x1))
     (is (= (nth memory 0x5) 0x5))
-    (is (= (nth memory 0x6) 0x6)))))
+    (is (= (nth memory 0x6) 0x6))))
+(testing "instruction 0x8XY7 substract vY from vX and sets the result in vX"
+  (let [result (execute {:instruction 0x8
+                         :x 0x3
+                         :y 0x5
+                         :n 0x7}
+                        {:registers {:vF 0x1
+                                     :v3 0x7
+                                     :v5 0x5}})
+        registers (:registers result)]
+    (is (= (:vF registers) 0x0))
+    (is (= (:v3 registers) 0xFE))
+    (is (= (:v5 registers) 0x5)))
+  (let [result (execute {:instruction 0x8
+                         :x 0xA
+                         :y 0x3
+                         :n 0x7}
+                        {:registers {:vF 0x0
+                                     :v3 0x9
+                                     :vA 0x3}})
+        registers (:registers result)]
+    (is (= (:vF registers) 0x1))
+    (is (= (:v3 registers) 0x9))
+    (is (= (:vA registers) 0x6)))))
