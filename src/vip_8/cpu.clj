@@ -1,5 +1,6 @@
 (ns vip-8.cpu
   (:require [vip-8.screen :as screen]
+            [vip-8.keyboard :as keyboard]
             [clojure.string :as string]))
 
 (defn read-instruction 
@@ -280,6 +281,15 @@
           (set-register state
                         :index
                         (+ 0x050 (* 5 character))))
+        (= operation 0x0A)
+        (let [pressed-key (keyboard/get-pressed)]
+          (if (nil? pressed-key)
+            (set-register state
+                          :pc
+                          (- (:pc (:registers state)) 2))
+            (set-register state
+                          (get-register-key (:x instruction))
+                          pressed-key)))
         (= operation 0x55)
         (loop [reg 0
                partial-result state]

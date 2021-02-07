@@ -2,7 +2,8 @@
   (:require [clojure.test :refer :all]
             [vip-8.core :as core]
             [vip-8.rom :as rom]
-            [vip-8.screen :as screen]))
+            [vip-8.screen :as screen]
+            [vip-8.keyboard :as keyboard]))
 
 (defn run-instructions [status runs]
   (loop [remaining-runs runs
@@ -372,5 +373,23 @@
         (let [result (run-instructions status 85)
               registers (:registers result)]
           (is (= (:index registers) 0x055)))))))
+(deftest delay-timer-test
+  (with-redefs [rom/read-rom 
+                (fn [_]
+                  [0x64 0x00 0x22 0x1e 0xf5 0x0a 0x45 0x02 0x76 0x01 0x45 0x08 0x76 0xff 0x35 0x05
+                   0x12 0x02 0xf6 0x15 0xf6 0x07 0x22 0x1e 0x36 0x00 0x12 0x14 0x12 0x02 0x00 0xe0
+                   0xa2 0x3a 0xf6 0x33 0xf2 0x65 0x63 0x00 0xf0 0x29 0xd3 0x45 0x73 0x05 0xf1 0x29
+                   0xd3 0x45 0x73 0x05 0xf2 0x29 0xd3 0x45 0x00 0xee])]
+    (let [status (core/load-rom "delay_timer_test.ch8")]
+      (testing "instruction 0xF50A waits for a key to be pressed and sets the v5 register to its value"
+        (with-redefs [keyboard/get-pressed (fn [] nil)]
+          (let [result (run-instructions status 17)]
+            (is (= (:pc (:registers result)) 0x204))))
+        (with-redefs [keyboard/get-pressed (fn [] 0x2)]
+          (let [result (run-instructions status 17)
+                registers (:registers result)]
+            (is (= (:pc registers) 0x206))
+            (is (= (:v5 registers) 0x2))))))))
+
 
 

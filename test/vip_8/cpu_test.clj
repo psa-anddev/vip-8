@@ -1,7 +1,8 @@
 (ns vip-8.cpu-test
   (:require [clojure.test :refer :all]
             [vip-8.cpu :refer :all]
-            [vip-8.screen :as screen]))
+            [vip-8.screen :as screen]
+            [vip-8.keyboard :as keyboard]))
 
 (deftest read-instruction-test
   (testing "instructions can be decoded"
@@ -785,4 +786,39 @@
                                      :v8 0xF3
                                      :vA 0xF2}})
         registers (:registers result)]
-    (is (= (:index registers) 0x05F)))))
+    (is (= (:index registers) 0x05F))))
+(testing "instruction 0xFX0A stores the last pressed key into the vX register"
+  (with-redefs [keyboard/get-pressed (fn [] nil)]
+    (let [result (execute {:instruction 0xF
+                           :x 0x7
+                           :nn 0x0A}
+                          {:registers {:pc 0x2}})]
+      (is (= (:pc (:registers result)) 0x0))))
+  (with-redefs [keyboard/get-pressed (fn [] 0x0)]
+    (let [result (execute {:instruction 0xF
+                           :x 0x7
+                           :nn 0x0A}
+                          {:registers {:pc 0x2
+                                       :v7 0xA}})
+          registers (:registers result)]
+      (is (= (:pc registers) 0x2))
+      (is (= (:v7 registers) 0x0)))
+    (let [result (execute {:instruction 0xF
+                           :x 0x4
+                           :nn 0x0A}
+                          {:registers {:pc 0x2
+                                       :v4 0x7
+                                       :v7 0xA}})
+          registers (:registers result)]
+      (is (= (:pc registers) 0x2))
+      (is (= (:v7 registers) 0xA))
+      (is (= (:v4 registers) 0x0))))
+  (with-redefs [keyboard/get-pressed (fn [] 0xA)]
+    (let [result (execute {:instruction 0xF
+                           :x 0x6
+                           :nn 0x0A}
+                          {:registers {:pc 0x2
+                                       :v6 0x7}})
+          registers (:registers result)]
+      (is (= (:pc registers) 0x2))
+      (is (= (:v6 registers) 0xA))))))
