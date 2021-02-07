@@ -293,9 +293,9 @@
           (if (nil? pressed-key)
             (set-register state
                           :pc
-                          (- (:pc (:registers state)) 2))
+                          (- (:pc registers) 2))
             (set-register state
-                          (get-register-key (:x instruction))
+                          x-reg-key
                           pressed-key)))
         (= operation 0x55)
         (loop [reg 0
@@ -322,10 +322,8 @@
                                       (+ (:index (:registers partial-result))
                                          reg))))))
         (= operation 0x33)
-        (let [registers (:registers state)
-              address (:index registers)
-              value (registers
-                     (get-register-key (:x instruction)))
+        (let [address (:index registers)
+              value (x-reg-key registers)
               cene (int (/ value 100))
               dece (int (/ (- value (* cene 100)) 10))
               unit (rem value 10)]
