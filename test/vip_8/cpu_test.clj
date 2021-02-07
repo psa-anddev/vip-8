@@ -755,4 +755,34 @@
         registers (:registers result)]
     (is (= (:vF registers) 0x1))
     (is (= (:v3 registers) 0x9))
-    (is (= (:vA registers) 0x6)))))
+    (is (= (:vA registers) 0x6))))
+(testing "instruction 0xFX29 sets the index register to the right address for the last hex digit in vX"
+  (let [result (execute {:instruction 0xF
+                         :x 0xA
+                         :nn 0x29}
+                        {:registers {:index 0x0
+                                     :vA 0xF0}})
+        registers (:registers result)]
+    (is (= (:index registers) 0x050)))
+  (let [result (execute {:instruction 0xF
+                         :x 0xA
+                         :nn 0x29}
+                        {:registers {:index 0x0
+                                     :vA 0xF1}})
+        registers (:registers result)]
+    (is (= (:index registers) 0x055)))
+  (let [result (execute {:instruction 0xF
+                         :x 0xA
+                         :nn 0x29}
+                        {:registers {:index 0x0
+                                     :vA 0xF2}})
+        registers (:registers result)]
+    (is (= (:index registers) 0x05A)))
+  (let [result (execute {:instruction 0xF
+                         :x 0x8
+                         :nn 0x29}
+                        {:registers {:index 0x0
+                                     :v8 0xF3
+                                     :vA 0xF2}})
+        registers (:registers result)]
+    (is (= (:index registers) 0x05F)))))

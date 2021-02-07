@@ -367,6 +367,10 @@
       (testing "instruction 0x8567 sets register v5 to the result of v6 - v5 and sets the carry flag appropriately"
         (let [result (run-instructions status 39)
               registers (:registers result)]
-          (is (= (:v5 registers) 0x1)))))))
+          (is (= (:v5 registers) 0x1))))
+      (testing "instruction 0xF329 finds the character in the last nible of the value in v3 and sets the index register to the address to that font character"
+        (let [result (run-instructions status 85)
+              registers (:registers result)]
+          (is (= (:index registers) 0x055)))))))
 
 

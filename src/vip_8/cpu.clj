@@ -274,6 +274,12 @@
   (defn timers-and-memory []
     (let [operation (:nn instruction)]
       (cond
+        (= operation 0x29)
+        (let [registers (:registers state)
+              character (bit-and (registers (get-register-key (:x instruction))) 0xF)]
+          (set-register state
+                        :index
+                        (+ 0x050 (* 5 character))))
         (= operation 0x55)
         (loop [reg 0
                partial-result state]
