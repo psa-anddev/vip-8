@@ -325,10 +325,8 @@
           (is (= (:v0 registers) 0x30))))
       (testing "instruction 0xF633 stores the decimal digits of the number in register v6 into the address of the index registers and the next two"
         (let [result (run-instructions status 187)
-              memory (:memory result)
-              registers (:registers result)]
+              memory (:memory result)]
           (is (= (nth memory 0x3e8) 1))
           (is (= (nth memory 0x3e9) 3))
-          (is (= (nth memory 0x3ea) 7))
-          (println (format "the value %d should be stored in addresses 0x%x and the next 2." (:v6 registers) (:index registers))))))))
+          (is (= (nth memory 0x3ea) 7)))))))
 
