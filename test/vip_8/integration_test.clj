@@ -389,7 +389,16 @@
           (let [result (run-instructions status 17)
                 registers (:registers result)]
             (is (= (:pc registers) 0x206))
-            (is (= (:v5 registers) 0x2))))))))
+            (is (= (:v5 registers) 0x2)))))
+      (let [pressed-keys (atom '(0x2 0x8 0x2 0x2 0x2 0x8 0x5))]
+        (with-redefs [keyboard/get-pressed 
+                      (fn []
+                        (let [pk (first @pressed-keys)]
+                          (swap! pressed-keys #(rest %))
+                          pk))]
+          (testing "instruction 0xF615 sets the delay timer to the value in v6"
+            (let [result (run-instructions status 147)]
+              (is (= (:delay (:timers result)) 0x2)))))))))
 
 
 

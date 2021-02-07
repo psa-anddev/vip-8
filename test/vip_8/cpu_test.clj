@@ -821,4 +821,24 @@
                                        :v6 0x7}})
           registers (:registers result)]
       (is (= (:pc registers) 0x2))
-      (is (= (:v6 registers) 0xA))))))
+      (is (= (:v6 registers) 0xA)))))
+(testing "instruction 0xFX15 sets the delay timer to vX"
+  (let [result (execute {:instruction 0xF
+                         :x 0x1
+                         :nn 0x15}
+                        {:registers {:v1 0x9A}
+                         :timers {:delay 0x0}})]
+    (is (= (:delay (:timers result)) 0x9A)))
+  (let [result (execute {:instruction 0xF
+                         :x 0x1
+                         :nn 0x15}
+                        {:registers {:v1 0xFB}
+                         :timers {:delay 0x0}})]
+    (is (= (:delay (:timers result)) 0xFB)))
+  (let [result (execute {:instruction 0xF
+                         :x 0x8
+                         :nn 0x15}
+                        {:registers {:v1 0xFB
+                                     :v8 0xAC}
+                         :timers {:delay 0x0}})]
+    (is (= (:delay (:timers result)) 0xAC)))))

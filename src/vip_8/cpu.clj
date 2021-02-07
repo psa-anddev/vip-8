@@ -273,11 +273,18 @@
           (if (bit-test (registers x-reg-key) 0) 0x1 0x0))
         :else (throw (Exception. (str "Logical operation " operation " not implemented. (Full instruction: " instruction ")"))))))
   (defn timers-and-memory []
-    (let [operation (:nn instruction)]
+    (let [operation (:nn instruction)
+          registers (:registers state)
+          x-reg-key (get-register-key (:x instruction))]
       (cond
+        (= operation 0x15)
+        (assoc state
+               :timers
+               (assoc (:timers state)
+                      :delay
+                      (x-reg-key registers)))
         (= operation 0x29)
-        (let [registers (:registers state)
-              character (bit-and (registers (get-register-key (:x instruction))) 0xF)]
+        (let [character (bit-and (x-reg-key registers) 0xF)]
           (set-register state
                         :index
                         (+ 0x050 (* 5 character))))
