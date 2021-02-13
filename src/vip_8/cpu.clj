@@ -284,6 +284,13 @@
                (assoc (:timers state)
                       :delay
                       (x-reg-key registers)))
+        (= operation 0x18)
+        (assoc state
+               :timers
+               (assoc (:timers state)
+                      :sound
+                      (x-reg-key registers)))
+        
         (= operation 0x29)
         (let [character (bit-and (x-reg-key registers) 0xF)]
           (set-register state

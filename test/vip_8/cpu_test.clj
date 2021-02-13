@@ -865,4 +865,18 @@
                                        :vA 0x00}})
           registers (:registers result)]
       (is (= (:v7 registers) 0xFF))
-      (is (= (:vA registers) 0x2))))))
+      (is (= (:vA registers) 0x2)))))
+(testing "instruction 0xFX18 sets the sound timer to the value of vX"
+  (let [result (execute {:instruction 0xF
+                         :x 0x7
+                         :nn 0x18}
+                        {:registers {:v7 0xA}
+                         :timers {:sound 0x0}})]
+    (is (= (:sound (:timers result)) 0xA)))
+  (let [result (execute {:instruction 0xF
+                         :x 0xA
+                         :nn 0x18}
+                        {:registers {:v7 0xA
+                                     :vA 0x7}
+                         :timers {:sound 0x0}})]
+    (is (= (:sound (:timers result)) 0x7)))))
