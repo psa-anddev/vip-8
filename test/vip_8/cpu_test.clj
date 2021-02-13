@@ -894,4 +894,30 @@
                                      :v3 0x6}
                          :timers {:delay 0xFA}})]
     (is (= (:v3 (:registers result)) 0xFA))
-    (is (= (:vD (:registers result)) 0x7)))))
+    (is (= (:vD (:registers result)) 0x7))))
+(testing "instruction 0xFX1E adds vX to the index register"
+  (let [result (execute {:instruction 0xF
+                         :x 0x3
+                         :nn 0x1E}
+                        {:registers {:index 0x0
+                                     :v3 0x0
+                                     :vF 0x0}})]
+    (is (= (:index (:registers result)) 0x0))
+    (is (= (:vF (:registers result)) 0x0)))
+  (let [result (execute {:instruction 0xF
+                         :x 0x3
+                         :nn 0x1E}
+                        {:registers {:index 0x7
+                                     :v3 0xF0
+                                     :vF 0x0}})]
+    (is (= (:index (:registers result)) 0xF7))
+    (is (= (:vF (:registers result)) 0x0)))
+  (let [result (execute {:instruction 0xF
+                         :x 0xD
+                         :nn 0x1E}
+                        {:registers {:index 0xFFE
+                                     :vD 0x04
+                                     :vF 0x0}})
+        registers (:registers result)]
+    (is (= (:index registers) 0x2))
+    (is (= (:vF registers) 0x1)))))

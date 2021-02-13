@@ -295,6 +295,18 @@
                       :sound
                       (x-reg-key registers)))
         
+        (= operation 0x1E)
+        (let [new-value (+ (registers x-reg-key)
+                           (:index registers))]
+          (set-register 
+            (set-register state
+                          :index
+                          (bit-and
+                            new-value
+                            0xFFF))
+            :vF
+            (if (> new-value 0xFFF) 0x1 0x0)))
+
         (= operation 0x29)
         (let [character (bit-and (x-reg-key registers) 0xF)]
           (set-register state
