@@ -94,7 +94,7 @@
 
 (defn -main [& args]
   (screen/load-window)
-  (loop [status (load-rom "./roms/bc_test.ch8")
+  (loop [status (load-rom (first args))
          inst-counter 300]
     (when (> inst-counter 0)
       (recur (step status)
