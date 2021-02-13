@@ -278,6 +278,10 @@
           registers (:registers state)
           x-reg-key (get-register-key (:x instruction))]
       (cond
+        (= operation 0x07)
+        (set-register state
+                      x-reg-key
+                      (:delay (:timers state)))
         (= operation 0x15)
         (assoc state
                :timers

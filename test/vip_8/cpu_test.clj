@@ -879,4 +879,19 @@
                         {:registers {:v7 0xA
                                      :vA 0x7}
                          :timers {:sound 0x0}})]
-    (is (= (:sound (:timers result)) 0x7)))))
+    (is (= (:sound (:timers result)) 0x7))))
+(testing "instruction 0xFX07 sets vX to the value of the delay timer"
+  (let [result (execute {:instruction 0xF
+                         :x 0xD
+                         :nn 0x07}
+                        {:registers {:vD 0x0}
+                         :timers {:delay 0x12}})]
+    (is (=  (:vD (:registers result)) 0x12)))
+  (let [result (execute {:instruction 0xF
+                         :x 0x3
+                         :nn 0x07}
+                        {:registers {:vD 0x7
+                                     :v3 0x6}
+                         :timers {:delay 0xFA}})]
+    (is (= (:v3 (:registers result)) 0xFA))
+    (is (= (:vD (:registers result)) 0x7)))))

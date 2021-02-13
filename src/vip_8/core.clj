@@ -49,7 +49,34 @@
                  :pc 0x200
                  :index 0x000}
      :timers {:delay 0
-              :sound 0}}))
+              :sound 0}
+     :deltas {:delay (System/currentTimeMillis)
+              :sound (System/currentTimeMillis)}}))
+
+(defn now []
+  (System/currentTimeMillis))
+
+(defn update-delay-timer [status]
+  (let [deltas (:deltas status)
+        timers (:timers status)]
+    (if (not (nil? deltas))
+      (let [update-time (now)]
+        (if (> (- update-time (:delay deltas)) 16)
+          (let [new-timers (assoc timers 
+                                  :delay
+                                  (if (zero? (:delay timers))
+                                    0
+                                    (dec (:delay timers))))]
+            (assoc
+              (assoc status
+                     :timers
+                     new-timers)
+              :deltas
+              (assoc deltas 
+                     :delay
+                     update-time)))
+          status))
+      status)))
 
 (defn step
   "Executes an instruction and returns the resulting status"
@@ -63,12 +90,12 @@
                   :pc
                   (+ (:pc (:registers prev-status)) 2)))]
     (cpu/execute instruction 
-                 after-reading-status)))
+                 (update-delay-timer after-reading-status))))
 
 (defn -main [& args]
   (screen/load-window)
-  (loop [status (load-rom "./roms/ibm-logo.ch8")
-         inst-counter 20]
+  (loop [status (load-rom "./roms/bc_test.ch8")
+         inst-counter 300]
     (when (> inst-counter 0)
       (recur (step status)
              (dec inst-counter)))))

@@ -264,3 +264,30 @@
               registers (:registers status)]
           (is (= (:pc registers) 0x204))
           (is (= (:index registers) 0x201))))))))
+
+(deftest timers-test
+  (testing "delay timer doesn't get modified if delta is less than 60 Hz"
+    (with-redefs [now (fn [] 1400)]
+      (let [status (step {:memory [0x00 0xE0]
+                           :registers {:pc 0x0}
+                           :timers {:delay 0x10}
+                           :deltas {:delay 1398}})]
+        (is (= (:delay (:timers status)) 0x10))
+        (is (= (:delay (:deltas status)) 1398)))))
+
+  (testing "delay timer gets modified if the delta is over 60 Hz"
+    (with-redefs [now (fn [] 1500)]
+      (let [status (step {:memory [0x00 0xE0]
+                           :registers {:pc 0x0}
+                           :timers {:delay 0x10}
+                           :deltas {:delay 1483}})]
+        (is (= (:delay (:timers status)) 0xF))
+        (is (= (:delay (:deltas status)) 1500)))))
+  (testing "delay timer stays at 0"
+    (with-redefs [now (fn [] 1600)]
+      (let [status (step {:memory [0x00 0xE0]
+                          :registers {:pc 0x0}
+                          :timers {:delay 0x0}
+                          :deltas {:delay 1483}})]
+        (is (= (:delay (:timers status)) 0x0))
+        (is (= (:delay (:deltas status)) 1600))))))
