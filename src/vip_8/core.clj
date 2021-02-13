@@ -1,7 +1,8 @@
 (ns vip-8.core
   (:require [vip-8.rom :as rom]
             [vip-8.screen :as screen]
-            [vip-8.cpu :as cpu]))
+            [vip-8.cpu :as cpu]
+            [vip-8.sound :as sound]))
 
 (defn load-rom [filename]
   (let [font '(
@@ -78,6 +79,35 @@
           status))
       status)))
 
+(defn value-or-default [ value default]
+  (if (nil? value)
+    default
+    value))
+(defn update-sound-timer [status]
+  (let [update-time (now)
+        last-update (value-or-default (:sound (:deltas status)) 0)
+        stored-sound-timer (value-or-default (:sound (:timers status)) 0)
+        should-update? (> (- update-time last-update) 16)
+        sound-timer (if (and (> stored-sound-timer 0)
+                             should-update?)
+                      (dec stored-sound-timer)
+                      stored-sound-timer)]
+    (if (> sound-timer 0)
+      (sound/play)
+      (sound/stop))
+    (if should-update?
+      (assoc 
+        (assoc status
+               :timers
+               (assoc (:timers status)
+                      :sound
+                      sound-timer))
+        :deltas
+        (assoc (:deltas status)
+               :sound
+               update-time))
+      status)))
+
 (defn step
   "Executes an instruction and returns the resulting status"
   [prev-status]
@@ -90,12 +120,13 @@
                   :pc
                   (+ (:pc (:registers prev-status)) 2)))]
     (cpu/execute instruction 
-                 (update-delay-timer after-reading-status))))
+                 (update-delay-timer 
+                   (update-sound-timer  after-reading-status)))))
 
 (defn -main [& args]
   (screen/load-window)
   (loop [status (load-rom (first args))
-         inst-counter 300]
+         inst-counter (second args)]
     (when (> inst-counter 0)
       (recur (step status)
              (dec inst-counter)))))

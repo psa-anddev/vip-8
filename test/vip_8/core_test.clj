@@ -2,7 +2,8 @@
   (:require [clojure.test :refer [deftest testing is]]
             [vip-8.core :refer :all]
             [vip-8.rom :as rom]
-            [vip-8.screen :as screen]))
+            [vip-8.screen :as screen]
+            [vip-8.sound :as sound]))
 
 (deftest load-rom-tests
   (testing "font is loading in memory in addresses from 050 to 09F"
@@ -290,4 +291,38 @@
                           :timers {:delay 0x0}
                           :deltas {:delay 1483}})]
         (is (= (:delay (:timers status)) 0x0))
-        (is (= (:delay (:deltas status)) 1600))))))
+        (is (= (:delay (:deltas status)) 1600)))))
+  (let [sound (atom :stopped)
+        current-time (atom 1000)]
+    (with-redefs [now (fn [] @current-time)
+                  sound/play 
+                  (fn [] (swap! sound (fn [_] :playing)))
+                  sound/stop 
+                  (fn [] (swap! sound (fn [_] :stopped)))]
+      (testing "no sound is played with the sound timer set to 0"
+        (step {:memory [0x00 0xE0]
+               :registers {:pc 0x0}
+               :deltas {:sound 1000
+                        :delay 1000}
+               :timers {:sound 0
+                        :delay 0}})
+        (is (= @sound :stopped)))
+      (testing "sound is played when the sound timer is greater than 0"
+        (step {:memory [0x00 0xE0]
+               :registers {:pc 0x0}
+               :deltas {:sound 1000
+                        :delay 1000}
+               :timers {:sound 1
+                        :delay 0}})
+        (is (= @sound :playing)))
+      (testing "sound timer is updated at 60 Hz"
+        (swap! current-time #(+ % 20))
+        (let [result (step {:memory [0x00 0xE0]
+                            :registers {:pc 0x0}
+                            :deltas {:sound 1000
+                                     :delay 1000}
+                            :timers {:sound 1
+                                     :delay 0}})]
+          (is (= (:sound (:timers result)) 0))
+          (is (= (:sound (:deltas result)) 1020))
+          (is (= @sound :stopped)))))))

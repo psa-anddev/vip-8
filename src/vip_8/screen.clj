@@ -49,7 +49,6 @@
                (loop [rem-pixels active-pixels]
                  (when (not (empty? rem-pixels))
                    (let [[x y] (first rem-pixels)]
-                     (print "X: " x ", Y: " y)
                      (.fillRect context 
                                 (* x x-scale)
                                 (* y y-scale)
