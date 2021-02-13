@@ -157,7 +157,23 @@
         :y 0x0
         :n 0x0
         :nn 0xAB
-        :nnn 0x0}))))
+        :nnn 0x0})))
+(is (= (read-instruction {:memory [0xe2 0x9e]
+                          :registers {:pc 0x0}})
+       {:instruction 0xE
+        :x 0x2
+        :y 0x0
+        :n 0x0
+        :nn 0x9E
+        :nnn 0x0}))
+(is (= (read-instruction {:memory [0xb1 0xe8]
+                          :registers {:pc 0x0}})
+       {:instruction 0xB
+        :x 0x0
+        :y 0x0
+        :n 0x0
+        :nn 0x0
+        :nnn 0x1E8})))
 
 (deftest execute-test
   (testing "instruction 0x00e0 clears the screen"
@@ -920,4 +936,55 @@
                                      :vF 0x0}})
         registers (:registers result)]
     (is (= (:index registers) 0x2))
-    (is (= (:vF registers) 0x1)))))
+    (is (= (:vF registers) 0x1))))
+(testing "instruction 0xEX9E skips an instruction if the key in vX is pressed"
+  (with-redefs [keyboard/key-pressed? (fn [_] false)]
+    (let [result (execute {:instruction 0xE
+                           :x 0x7
+                           :nn 0x9E}
+                          {:registers {:pc 0x200
+                                       :v7 0x1}})]
+      (is (= (:pc (:registers result)) 0x200))))
+  (with-redefs [keyboard/key-pressed? 
+                (fn [key] (= key 0xA))]
+    (let [result (execute {:instruction 0xE
+                           :x 0x8
+                           :nn 0x9E}
+                          {:registers {:pc 0x200
+                                       :v8 0x1}})]
+      (is (= (:pc (:registers result)) 0x200)))
+    (let [result (execute {:instruction 0xE
+                           :x 0x8
+                           :nn 0x9E}
+                          {:registers {:pc 0x200
+                                       :v8 0xA}})]
+      (is (= (:pc (:registers result)) 0x202)))))
+(testing "instruction 0xEXA1 skips an instruction if the key is not pressed"
+  (with-redefs [keyboard/key-pressed? (fn [k] (= k 0xA))]
+    (let [result (execute {:instruction 0xE
+                           :x 0x7
+                           :nn 0xA1}
+                          {:registers {:pc 0x210
+                                       :v7 0xA
+                                       :v8 0x8}})]
+      (is (= (:pc (:registers result)) 0x210)))
+    (let [result (execute {:instruction 0xE
+                           :x 0x8
+                           :nn 0xA1}
+                          {:registers {:pc 0x256
+                                       :v7 0xA
+                                       :v8 0x8}})]
+      (is (= (:pc (:registers result)) 0x258)))))
+(testing "instruction 0xBNNN jumps to address NNN with v0 as offset"
+  (let [result (execute {:instruction 0xB
+                         :nnn 0x32A}
+                        {:registers {:pc 0x0
+                                     :v0 0x1}})
+        registers (:registers result)]
+    (is (= (:pc registers) 0x32B)))
+  (let [result (execute {:instruction 0xB
+                         :nnn 0x7A0}
+                        {:registers {:pc 0x0
+                                     :v0 0x1F}})
+        registers (:registers result)]
+    (is (= (:pc registers) 0x7BF)))))

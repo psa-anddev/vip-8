@@ -27,6 +27,7 @@
           (= opcode 0x3)
           (= opcode 0x4)
           (= opcode 0xC)
+          (= opcode 0xE)
           (= opcode 0xF))
       {:instruction opcode
        :x (bit-and first-byte 0xF)
@@ -35,6 +36,7 @@
        :nn second-byte
        :nnn 0x0}
       (or (= opcode 0xA)
+          (= opcode 0xB)
           (= opcode 0x2)
           (= opcode 0x1))
       {:instruction opcode
@@ -367,6 +369,24 @@
                   (get-register-key (:x instruction))
                   (bit-and (rand-int 0xFF)
                            (:nn instruction))))
+(defn keypresses-instructions []
+  (let [operation (:nn instruction)
+        key ((:registers state) (get-register-key (:x instruction)))]
+    (if (or (and (= operation 0x9E) 
+              (keyboard/key-pressed? key))
+            (and (= operation 0xA1) 
+                 (not (keyboard/key-pressed? key))))
+      (set-register state
+                    :pc
+                    (+ (:pc (:registers state))
+                       2))
+      state)))
+
+  (defn jump-with-offset []
+    (set-register state
+                  :pc
+                  (+ (:nnn instruction)
+                     (:v0 (:registers state)))))
 
   (let [instructions {:e0 clear-screen
                       :ee return-from-subroutine
@@ -379,8 +399,10 @@
                       :8 logical-operation
                       :9 jump-not-equal-registers
                       :a set-index-register
+                      :b jump-with-offset
                       :c generate-random
                       :d draw-sprite
+                      :e keypresses-instructions
                       :f timers-and-memory
                       :1 set-program-counter}
         op-keyword (keyword (format "%x" (:instruction instruction)))]
