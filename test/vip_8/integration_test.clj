@@ -400,5 +400,18 @@
             (let [result (run-instructions status 147)]
               (is (= (:delay (:timers result)) 0x2)))))))))
 
+(deftest random-number-test
+  (with-redefs [rom/read-rom 
+                (fn [_]
+                  [0x65 0x00 0x00 0xe0 0xc3 0xff 0xa2 0x22 0xf3 0x33 0xf2 0x65 0x64 0x00 0xf0 0x29
+                   0xd4 0x55 0x74 0x05 0xf1 0x29 0xd4 0x55 0x74 0x05 0xf2 0x29 0xd4 0x55 0xf3 0x0a
+                   0x12 0x02])
+                keyboard/get-pressed (fn [] 2)
+                rand-int (fn [_] 0xFA)]
+    (let [status (core/load-rom "random_number_test.ch8")]
+      (testing "instruction 0xC3FF generates a random number binary ands it with 0xFF and stores it in v3"
+        (let [result (run-instructions status 3)]
+          (is (= (:v3 (:registers result)) 0xFA)))))))
+
 
 

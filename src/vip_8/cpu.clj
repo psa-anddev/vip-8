@@ -26,6 +26,7 @@
           (= opcode 0x7)
           (= opcode 0x3)
           (= opcode 0x4)
+          (= opcode 0xC)
           (= opcode 0xF))
       {:instruction opcode
        :x (bit-and first-byte 0xF)
@@ -338,6 +339,11 @@
             unit))
         :else
         (throw (Exception. (str "Timer and memory operation " (format "0x%x" operation) " not implemented. (Full instruction: " instruction ")"))))))
+  (defn generate-random []
+    (set-register state
+                  (get-register-key (:x instruction))
+                  (bit-and (rand-int 0xFF)
+                           (:nn instruction))))
 
   (let [instructions {:e0 clear-screen
                       :ee return-from-subroutine
@@ -350,6 +356,7 @@
                       :8 logical-operation
                       :9 jump-not-equal-registers
                       :a set-index-register
+                      :c generate-random
                       :d draw-sprite
                       :f timers-and-memory
                       :1 set-program-counter}

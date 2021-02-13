@@ -149,6 +149,14 @@
         :y 0x0
         :n 0x0
         :nn 0x17
+        :nnn 0x0}))
+(is (= (read-instruction {:memory [0xC4 0xAB]
+                          :registers {:pc 0x0}})
+       {:instruction 0xC
+        :x 0x4
+        :y 0x0
+        :n 0x0
+        :nn 0xAB
         :nnn 0x0}))))
 
 (deftest execute-test
@@ -841,4 +849,20 @@
                         {:registers {:v1 0xFB
                                      :v8 0xAC}
                          :timers {:delay 0x0}})]
-    (is (= (:delay (:timers result)) 0xAC)))))
+    (is (= (:delay (:timers result)) 0xAC))))
+(testing "instruction 0xCXNN generates a random number, ands it with NN and stores it in vX"
+  (with-redefs [rand-int (fn [_] 0x9A)]
+    (let [result (execute {:instruction 0xC
+                           :x 0x7
+                           :nn 0x33}
+                          {:registers {:v7 0x3}})]
+      (is (= (:v7 (:registers result)) 0x12))))
+  (with-redefs [rand-int (fn [_] 0x03)]
+    (let [result (execute {:instruction 0xC
+                           :x 0xA
+                           :nn 0xAA}
+                          {:registers {:v7 0xFF
+                                       :vA 0x00}})
+          registers (:registers result)]
+      (is (= (:v7 registers) 0xFF))
+      (is (= (:vA registers) 0x2))))))
