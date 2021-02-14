@@ -1,5 +1,6 @@
 (ns vip-8.screen
-  (:require [cljfx.api :as fx])
+  (:require [cljfx.api :as fx]
+            [vip-8.keyboard :as keyboard])
   (:import [javafx.scene.canvas Canvas]
            [javafx.scene.paint Color]))
 
@@ -58,6 +59,7 @@
 
 (def renderer
   (fx/create-renderer 
+    :opts {:fx.opt/map-event-handler keyboard/handle-keyboard-event}
     :middleware 
     (fx/wrap-map-desc
       (fn [active-pixels]
@@ -67,6 +69,8 @@
          :width 1024
          :height 512
          :scene {:fx/type :scene
+                 :on-key-pressed {:event/type ::keyboard/key_pressed}
+                 :on-key-released {:event/type ::keyboard/key_released}
                  :root {:fx/type :v-box
                         :alignment :center
                         :children [{:fx/type emulator-display
