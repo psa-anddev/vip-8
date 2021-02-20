@@ -1,10 +1,10 @@
 (ns vip-8.sound
   (:require [clojure.core.async :as a])
-  (:import [javax.sound.midi MidiSystem]))
+  (:import [javax.sound.midi MidiSystem MidiChannel]))
 
 (def playing? (atom false))
 
-(defn play-note [channel note-map]
+(defn play-note [^MidiChannel channel note-map]
   (let [{:keys [note velocity]
          :or {note 60
               velocity 127}} note-map]
