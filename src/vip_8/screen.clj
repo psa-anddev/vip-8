@@ -34,28 +34,28 @@
 (defn height []
   32)
 
-(defn emulator-display [{:keys [viewport-width viewport-height active-pixels]}]
-  (let [x-scale (/ viewport-width (width))
-        y-scale (/ viewport-height (height))]
-    {:fx/type :canvas
-     :width viewport-width
-     :height viewport-height
-     :draw (fn [^Canvas canvas]
-             (let [context (.getGraphicsContext2D canvas)]
-               (doto context
-                 (.clearRect 0 0 viewport-width viewport-height)
-                 (.setFill Color/BLACK)
-                 (.fillRect 0 0 viewport-width viewport-height)
-                 (.setFill Color/LIGHTGRAY))
-               (loop [rem-pixels active-pixels]
-                 (when (not (empty? rem-pixels))
-                   (let [[x y] (first rem-pixels)]
-                     (.fillRect context 
-                                (* x x-scale)
-                                (* y y-scale)
-                                x-scale
-                                y-scale))
-                   (recur (rest rem-pixels))))))}))
+(defn emulator-display [{:keys [active-pixels]}]
+  {:fx/type :canvas
+   :draw (fn [^Canvas canvas]
+           (let [context (.getGraphicsContext2D canvas)
+                 canvas-width (.getWidth canvas)
+                 canvas-height (.getHeight canvas)
+                 x-scale (/ canvas-width (width))
+                 y-scale (/ canvas-height (height))]
+             (doto context
+               (.clearRect 0 0 canvas-width canvas-height)
+               (.setFill Color/BLACK)
+               (.fillRect 0 0 canvas-width canvas-height)
+               (.setFill Color/LIGHTGRAY))
+             (loop [rem-pixels active-pixels]
+               (when (not (empty? rem-pixels))
+                 (let [[x y] (first rem-pixels)]
+                   (.fillRect context 
+                              (* x x-scale)
+                              (* y y-scale)
+                              x-scale
+                              y-scale))
+                 (recur (rest rem-pixels))))))})
 
 (def renderer
   (fx/create-renderer 
@@ -66,17 +66,20 @@
         {:fx/type :stage
          :showing true
          :title "Vip 8"
-         :width 1024
-         :height 512
          :scene {:fx/type :scene
                  :on-key-pressed {:event/type ::keyboard/key_pressed}
                  :on-key-released {:event/type ::keyboard/key_released}
-                 :root {:fx/type :v-box
-                        :alignment :center
-                        :children [{:fx/type emulator-display
-                                    :viewport-width 512
-                                    :viewport-height 256
-                                    :active-pixels active-pixels}]}}}))))
+                 :fill :black
+                 :root {:fx/type fx/ext-on-instance-lifecycle
+                        :on-created 
+                        #(doseq [canvas (.getChildrenUnmodifiable %)]
+                           (.bind (.widthProperty canvas) (.widthProperty %))
+                           (.bind (.heightProperty canvas) (.divide (.widthProperty %)
+                                                                    (int 2))))
+                        :desc {:fx/type :v-box
+                               :alignment :center
+                               :children [{:fx/type emulator-display
+                                           :active-pixels active-pixels}]}}}}))))
 
 
 (defn load-window []
