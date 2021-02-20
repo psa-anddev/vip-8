@@ -239,14 +239,19 @@
   (with-redefs [rom/read-rom (fn [_] [])]
     (let [registers (:registers (load-rom "tetris.ch8"))]
       (is (= (:index registers) 0x000)))))
-(let [screen (atom (repeat 32 (repeat 64 true)))]
+(let [screen (atom (repeat 32 (repeat 64 true)))
+      current-time (atom (System/currentTimeMillis))]
   (with-redefs [rom/read-rom 
                 (fn [_] [0x00 0xE0 0xA2 0x01])
                 screen/clear 
                 (fn []
                   (swap! screen 
                          (fn [_] 
-                           (repeat 32 (repeat 64 false)))))]
+                           (repeat 32 (repeat 64 false)))))
+                now (fn [] 
+                      (let [result @current-time]
+                        (swap! current-time inc)
+                        result))]
     (let [initial-status (load-rom "pong.ch8")]
       (testing "clear instruction clears the screen"
         (let [status (step initial-status)]

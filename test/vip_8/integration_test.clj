@@ -10,8 +10,9 @@
          result status]
     (if (zero? remaining-runs)
       result
-      (recur (dec remaining-runs)
-             (core/step result)))))
+      (let [return-status (core/step result)]
+        (recur (- runs (:executed-instructions return-status))
+               return-status)))))
 
 (deftest ibm-logo-test
   (with-redefs [rom/read-rom 
@@ -48,7 +49,7 @@
                       screen/width (fn [] 64)
                       screen/height (fn [] 32)]
           (testing "First instruction in the execution"
-            (let [status (core/step initial-status)]
+            (let [status (run-instructions initial-status 1)]
               (is (= (:pc (:registers status))
                      0x202))
               (is (= @screen

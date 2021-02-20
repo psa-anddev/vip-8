@@ -4,6 +4,9 @@
             [vip-8.cpu :as cpu]
             [vip-8.sound :as sound]))
 
+(defn now []
+  (System/currentTimeMillis))
+
 (defn load-rom [filename]
   (let [font '(
                0xF0 0x90 0x90 0x90 0xF0 
@@ -51,11 +54,10 @@
                  :index 0x000}
      :timers {:delay 0
               :sound 0}
-     :deltas {:delay (System/currentTimeMillis)
-              :sound (System/currentTimeMillis)}}))
-
-(defn now []
-  (System/currentTimeMillis))
+     :deltas {:delay (now)
+              :sound (now)
+              :cpu (now)}
+     :executed-instructions 0}))
 
 (defn update-delay-timer [status]
   (let [deltas (:deltas status)
@@ -108,25 +110,43 @@
                update-time))
       status)))
 
+(defn advance-program-counter [prev-status]
+  (assoc prev-status 
+         :registers 
+         (assoc (:registers prev-status)
+                :pc
+                (+ (:pc (:registers prev-status)) 2))))
+(defn cycle-processor [prev-status]
+  (let [current-time (now)
+        last-execution (value-or-default (:cpu (:deltas prev-status)) (now))
+        should-execute? (> (- current-time last-execution) 1)]
+    (if should-execute?
+      (let [instruction (cpu/read-instruction prev-status)
+            starting-status (advance-program-counter prev-status)
+            result-status (cpu/execute instruction starting-status)
+            cpu-result-update (assoc result-status
+                                     :deltas
+                                     (assoc (:deltas result-status)
+                                            :cpu 
+                                            current-time))]
+        (assoc cpu-result-update 
+               :executed-instructions
+               (inc (:executed-instructions cpu-result-update))))
+      prev-status)))
 (defn step
   "Executes an instruction and returns the resulting status"
   [prev-status]
-  (let [instruction 
-        (cpu/read-instruction prev-status)
-        after-reading-status 
-    (assoc prev-status 
-           :registers 
-           (assoc (:registers prev-status)
-                  :pc
-                  (+ (:pc (:registers prev-status)) 2)))]
-    (cpu/execute instruction 
-                 (update-delay-timer 
-                   (update-sound-timer  after-reading-status)))))
+  (cycle-processor
+    (update-delay-timer
+      (update-sound-timer prev-status))))
 
 (defn -main [& args]
   (screen/load-window)
-  (loop [status (load-rom (first args))
-         inst-counter (second args)]
-    (when (> inst-counter 0)
-      (recur (step status)
-             (dec inst-counter)))))
+  (let [instructions-to-execute (second args)]
+    (loop [status (load-rom (first args))
+           inst-counter (second args)]
+      (when (> inst-counter 0)
+        (let [new-status (step status)]
+          (recur new-status
+                 (- instructions-to-execute 
+                    (:executed-instructions new-status))))))))
