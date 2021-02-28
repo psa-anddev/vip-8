@@ -3,7 +3,8 @@
             [vip-8.core :refer :all]
             [vip-8.rom :as rom]
             [vip-8.screen :as screen]
-            [vip-8.sound :as sound]))
+            [vip-8.sound :as sound]
+            [vip-8.events :as events]))
 
 (deftest load-rom-tests
   (testing "font is loading in memory in addresses from 050 to 09F"
@@ -331,3 +332,85 @@
           (is (= (:sound (:timers result)) 0))
           (is (= (:sound (:deltas result)) 1020))
           (is (= @sound :stopped)))))))
+
+(deftest main-tests
+  (let [main-window-loaded? (atom false)
+        operations (atom '())
+        modes (atom '())]
+    (defn mode-fn 
+      ([] (let [m (first @modes)]
+            (swap! modes rest)
+            m))
+      ([m] (swap! operations #(concat % (list {:set-mode m})))))
+    (defn clear-operations []
+      (swap! operations (fn [_] '())))
+
+    (defn set-modes [& new-modes]
+      (swap! modes #(concat new-modes %)))
+
+    (with-redefs [screen/load-window 
+                  (fn [] (swap! main-window-loaded? (fn [_] true)))
+                  screen/close-window 
+                  (fn [] (swap! operations #(concat % '(:window-closed))))
+                  load-rom (fn [f] (swap! operations #(concat % (list {:load f}))))
+                  events/mode mode-fn
+                  step (fn [_] (swap! operations #(concat % '(:step))))]
+      (testing "loads the main window"
+        (-main)
+        (is @main-window-loaded?))
+      (testing "closes the window when in closing mode"
+        (clear-operations)
+        (set-modes '(:closing))
+        (-main)
+        (is (= @operations '(:window-closed))))
+      (testing "loads the tetris ROM"
+        (clear-operations)
+        (set-modes '(:load "tetris.ch8")
+                   '(:closing))
+        (-main)
+        (is (= @operations
+               '({:load "tetris.ch8"}
+                 {:set-mode (:run)}
+                 :window-closed))))
+      (testing "loads the pacman ROM"
+        (clear-operations)
+        (set-modes '(:load "pacman.ch8")
+                   '(:closing))
+        (-main)
+        (is (= @operations
+               '({:load "pacman.ch8"}
+                 {:set-mode (:run)}
+                 :window-closed))))
+      (testing "steps once"
+        (clear-operations)
+        (set-modes '(:run) '(:closing))
+        (-main)
+        (is (= @operations '(:step :window-closed))))
+      (testing "steps twice"
+        (clear-operations)
+        (set-modes '(:run) '(:run) '(:closing))
+        (-main)
+        (is (= @operations 
+               '(:step :step :window-closed))))
+      (testing "loads and runs the mario ROM if passed as argument"
+        (clear-operations)
+        (set-modes '(:closing))
+        (-main "mario.ch8")
+        (is (= @operations
+               '({:set-mode (:load "mario.ch8")}
+                 :window-closed))))
+      (testing "loads and runs the lunar lander ROM if passed as argument"
+        (clear-operations)
+        (set-modes '(:closing))
+        (-main "lunar-lander.ch8")
+        (is (= @operations
+               '({:set-mode (:load "lunar-lander.ch8")}
+                 :window-closed))))
+      (testing "pause keeps the loop running"
+        (clear-operations)
+        (set-modes '(:pause)
+                   '(:run)
+                   '(:closing))
+        (-main)
+        (is (= @operations
+               '(:step :window-closed)))))))

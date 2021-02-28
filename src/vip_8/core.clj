@@ -2,7 +2,8 @@
   (:require [vip-8.rom :as rom]
             [vip-8.screen :as screen]
             [vip-8.cpu :as cpu]
-            [vip-8.sound :as sound]))
+            [vip-8.sound :as sound]
+            [vip-8.events :as events]))
 
 (defn now []
   (System/currentTimeMillis))
@@ -142,11 +143,17 @@
 
 (defn -main [& args]
   (screen/load-window)
-  (let [instructions-to-execute (second args)]
-    (loop [status (load-rom (first args))
-           inst-counter (second args)]
-      (when (> inst-counter 0)
-        (let [new-status (step status)]
-          (recur new-status
-                 (- instructions-to-execute 
-                    (:executed-instructions new-status))))))))
+  (when (seq? args)
+    (events/mode (list :load (first args))))
+  (loop [current-mode (events/mode)
+         status {}]
+    (cond 
+      (= (first current-mode) :load) 
+      (let [new-status (load-rom (second current-mode))]
+        (events/mode (list :run))
+        (recur (events/mode) new-status))
+      (= (first current-mode) :run) 
+      (recur (events/mode) (step status))
+      (= (first current-mode) :pause)
+      (recur (events/mode) status)))
+  (screen/close-window))

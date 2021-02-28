@@ -86,5 +86,5 @@
   (fx/on-fx-thread
     (fx/mount-renderer active-pixels renderer)))
 
-
+(defn close-window [])
 
