@@ -4,35 +4,42 @@
   (:import [javafx.scene.canvas Canvas]
            [javafx.scene.paint Color]))
 
-(def active-pixels (atom #{}))
+(def ui-state (atom {:active-pixels #{}
+                     :title "Vip 8"}))
 
 (defn clear 
   "Clears the screen"
   []
-  (swap! active-pixels (fn [_] #{})))
+  (swap! ui-state #(assoc % :active-pixels #{})))
 
 (defn is-on? 
   "Returns true if the given pixel is on"
   [x y]
-  (contains? @active-pixels (list x y)))
+  (contains? (:active-pixels @ui-state)
+             (list x y)))
 
 (defn set 
   "Sets a pixel of the screen"
   [x y on?]
-  (swap! active-pixels
-         (fn [v] 
-           (into #{}
-                 (if on?
-                   (cons (list x y) v)
-                   (filter (fn [[vx vy]] (or (not= x vx)
-                                             (not= y vy)))
-                           v))))))
+  (let [active-pixels (:active-pixels @ui-state)]
+    (swap! ui-state 
+           #(assoc % :active-pixels 
+                   (into #{} 
+                         (if on?
+                           (cons (list x y) active-pixels)
+                           (filter (fn [[vx vy]] (or (not= x vx)
+                                                     (not= y vy)))
+                                   active-pixels)))))))
 
 (defn width []
   64)
 
 (defn height []
   32)
+
+(defn title 
+  ([] (:title @ui-state))
+  ([title] (swap! ui-state #(assoc % :title title))))
 
 (defn emulator-display [{:keys [active-pixels]}]
   {:fx/type :canvas
@@ -48,7 +55,7 @@
                (.fillRect 0 0 canvas-width canvas-height)
                (.setFill Color/LIGHTGRAY))
              (loop [rem-pixels active-pixels]
-               (when (not (empty? rem-pixels))
+               (when (seq rem-pixels) 
                  (let [[x y] (first rem-pixels)]
                    (.fillRect context 
                               (* x x-scale)
@@ -62,10 +69,10 @@
     :opts {:fx.opt/map-event-handler keyboard/handle-keyboard-event}
     :middleware 
     (fx/wrap-map-desc
-      (fn [active-pixels]
+      (fn [ui-state]
         {:fx/type :stage
          :showing true
-         :title "Vip 8"
+         :title (:title ui-state)
          :scene {:fx/type :scene
                  :on-key-pressed {:event/type ::keyboard/key_pressed}
                  :on-key-released {:event/type ::keyboard/key_released}
@@ -79,12 +86,12 @@
                         :desc {:fx/type :v-box
                                :alignment :center
                                :children [{:fx/type emulator-display
-                                           :active-pixels active-pixels}]}}}}))))
+                                           :active-pixels (:active-pixels ui-state)}]}}}}))))
 
 
 (defn load-window []
   (fx/on-fx-thread
-    (fx/mount-renderer active-pixels renderer)))
+    (fx/mount-renderer ui-state renderer)))
 
 (defn close-window [])
 
