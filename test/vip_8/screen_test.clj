@@ -59,3 +59,14 @@
     (is (= (:title @ui-state) "Test 1"))
     (title "Some other title")
     (is (= (:title @ui-state) "Some other title"))))
+
+(deftest modline-test
+  (testing "returns the value for the modline"
+    (is (= (modline) "Pause | <No ROM>"))
+    (swap! ui-state #(assoc % :modline "Some modline"))
+    (is (= (modline) "Some modline")))
+  (testing "modifies the value for the modline"
+    (modline "No modline")
+    (is (= (:modline @ui-state) "No modline"))
+    (modline "Some other text for the modline")
+    (is (= (:modline @ui-state) "Some other text for the modline"))))

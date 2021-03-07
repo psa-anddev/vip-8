@@ -5,7 +5,8 @@
            [javafx.scene.paint Color]))
 
 (def ui-state (atom {:active-pixels #{}
-                     :title "Vip 8"}))
+                     :title "Vip 8"
+                     :modline "Pause | <No ROM>"}))
 
 (defn clear 
   "Clears the screen"
@@ -40,6 +41,10 @@
 (defn title 
   ([] (:title @ui-state))
   ([title] (swap! ui-state #(assoc % :title title))))
+
+(defn modline 
+  ([] (:modline @ui-state))
+  ([modline] (swap! ui-state #(assoc % :modline modline))))
 
 (defn emulator-display [{:keys [active-pixels]}]
   {:fx/type :canvas
@@ -78,11 +83,12 @@
                  :on-key-released {:event/type ::keyboard/key_released}
                  :fill :black
                  :root {:fx/type fx/ext-on-instance-lifecycle
-                        :on-created 
-                        #(doseq [canvas (.getChildrenUnmodifiable %)]
-                           (.bind (.widthProperty canvas) (.widthProperty %))
-                           (.bind (.heightProperty canvas) (.divide (.widthProperty %)
-                                                                    (int 2))))
+                         :on-created 
+                         #(doseq [child (.getChildrenUnmodifiable %)]
+                            (when (instance? Canvas child)
+                              (.bind (.widthProperty child) (.widthProperty %))
+                              (.bind (.heightProperty child) (.divide (.widthProperty %)
+                                                                      (int 2)))))
                         :desc {:fx/type :v-box
                                :alignment :center
                                :children [{:fx/type emulator-display
