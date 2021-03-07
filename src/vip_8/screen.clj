@@ -46,25 +46,35 @@
   ([] (:modline @ui-state))
   ([modline] (swap! ui-state #(assoc % :modline modline))))
 
-(defn emulator-display [{:keys [active-pixels]}]
+(defn emulator-display [{:keys [active-pixels modline]}]
   {:fx/type :canvas
    :draw (fn [^Canvas canvas]
            (let [context (.getGraphicsContext2D canvas)
                  canvas-width (.getWidth canvas)
                  canvas-height (.getHeight canvas)
+                 display-height (/ canvas-width 2)
+                 display-y-offset (/ (- canvas-height display-height)
+                                     2)
                  x-scale (/ canvas-width (width))
-                 y-scale (/ canvas-height (height))]
+                 y-scale (/ display-height (height))]
              (doto context
                (.clearRect 0 0 canvas-width canvas-height)
                (.setFill Color/BLACK)
                (.fillRect 0 0 canvas-width canvas-height)
-               (.setFill Color/LIGHTGRAY))
+               (.setFill Color/LIGHTGRAY)
+               (.setStroke Color/LIGHTGRAY)
+               (.fillText modline 10 
+                          (* canvas-height 0.99))
+               (.strokeLine 0 
+                          (* canvas-height 0.97)
+                          canvas-width 
+                          (* canvas-height 0.97)))
              (loop [rem-pixels active-pixels]
                (when (seq rem-pixels) 
                  (let [[x y] (first rem-pixels)]
                    (.fillRect context 
                               (* x x-scale)
-                              (* y y-scale)
+                              (+  (* y y-scale) display-y-offset)
                               x-scale
                               y-scale))
                  (recur (rest rem-pixels))))))})
@@ -87,12 +97,12 @@
                          #(doseq [child (.getChildrenUnmodifiable %)]
                             (when (instance? Canvas child)
                               (.bind (.widthProperty child) (.widthProperty %))
-                              (.bind (.heightProperty child) (.divide (.widthProperty %)
-                                                                      (int 2)))))
+                              (.bind (.heightProperty child) (.heightProperty %))))
                         :desc {:fx/type :v-box
                                :alignment :center
                                :children [{:fx/type emulator-display
-                                           :active-pixels (:active-pixels ui-state)}]}}}}))))
+                                           :active-pixels (:active-pixels ui-state)
+                                           :modline (:modline ui-state)}]}}}}))))
 
 
 (defn load-window []
