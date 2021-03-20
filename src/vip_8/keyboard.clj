@@ -1,5 +1,7 @@
 (ns vip-8.keyboard
-  (:require [cljfx.api :as fx])
+  (:require [cljfx.api :as fx]
+            [vip-8.events :as events]
+            [clojure.string :as string])
   (:import [javafx.scene.input KeyCode KeyEvent]))
 
 (def ^:private released-keys (atom '()))
@@ -34,16 +36,40 @@
                         KeyCode/V 0xF}]
     (conversion-map keycode)))
 
+(defn clear-keys []
+  (swap! pressed-keys (fn [_] #{}))
+  (swap! released-keys (fn [_] '())))
+
 (defmulti handle-keyboard-event :event/type)
 
 (defmethod handle-keyboard-event :default [event]
   (prn event))
 
 (defmethod handle-keyboard-event ::key_pressed [{:keys [fx/context fx/event]}]
-  (let [new-key (to-keypad (.getCode event))]
-    (swap! pressed-keys #(into #{} (cons new-key %)))))
+  (when (= (first (events/mode)) :run)
+    (let [new-key (to-keypad (.getCode event))]
+      (swap! pressed-keys #(into #{} (cons new-key %))))))
 
 (defmethod handle-keyboard-event ::key_released [{:keys [fx/context fx/event]}]
-  (let [new-key (to-keypad (.getCode event))]
-    (swap! pressed-keys #(into #{} (remove (fn [v] (= v new-key)) %)))
-    (swap! released-keys #(cons new-key %))))
+  (letfn [(run-mode-handling []
+            (if (= (.getCode event) KeyCode/COLON)
+              (events/mode (list :command ":"))
+              (let [new-key (to-keypad (.getCode event))]
+                (swap! pressed-keys #(into #{} (remove (fn [v] (= v new-key)) %)))
+                (swap! released-keys #(cons new-key %)))))]
+    (if (= (first (events/mode)) :run)
+      (run-mode-handling)
+      (let [code (.getCode event)]
+        (cond
+          (= code (KeyCode/BACK_SPACE))
+          (events/mode (list :command
+                             (string/join "" (drop-last (second (events/mode))))))
+          (= code (KeyCode/ENTER))
+          (events/mode (list :execute
+                             (second (events/mode))))
+          (= code (KeyCode/ESCAPE))
+          (events/cancel)
+          :else
+          (events/mode (list :command 
+                               (str (second (events/mode))
+                                    (.getText event)))))))))

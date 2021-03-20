@@ -6,21 +6,24 @@
             [vip-8.events :as events])
   (:import [javafx.scene.input KeyCode KeyEvent]))
 
-(defn event [event-type key-code]
-  {:event/type (keyword "vip-8.keyboard" event-type)
-   :fx/event (KeyEvent. (if (= event-type "key_pressed")
-                          (KeyEvent/KEY_PRESSED)
-                          (KeyEvent/KEY_RELEASED))
-                        ""
-                        ""
-                        key-code
-                        false
-                        false
-                        false
-                        false)})
+(defn event 
+  ([event-type key-code] (event event-type key-code ""))
+  ([event-type key-code text]
+   {:event/type (keyword "vip-8.keyboard" event-type)
+    :fx/event (KeyEvent. (if (= event-type "key_pressed")
+                           (KeyEvent/KEY_PRESSED)
+                           (KeyEvent/KEY_RELEASED))
+                         text
+                         text
+                         key-code
+                         false
+                         false
+                         false
+                         false)}))
 
 (deftest handle-keyboard-event-tests
   (testing "key pressed events in run mode"
+    (clear-keys)
     (events/mode (list :run))
 
     (testing "pressing 1 gets key 1 pressed"
@@ -87,7 +90,93 @@
       (handle-keyboard-event (event "key_pressed"
                                     (KeyCode/V)))
       (is (key-pressed? 0xF))))
+
+  (testing "key pressed events in command mode"
+    (clear-keys)
+    (events/mode (list :command ":"))
+
+    (testing "pressing 1 doesn't get any pressed keys"
+      (handle-keyboard-event (event "key_pressed"
+                                    (KeyCode/DIGIT1)))
+      (is (not (key-pressed? 0x1))))
+
+    (testing "pressing 2 doesn't get any pressed keys"
+      (handle-keyboard-event (event "key_pressed"
+                                    (KeyCode/DIGIT2)))
+      (is (not (key-pressed? 0x2))))
+
+    (testing "pressing 3 doesn't get any pressed keys"
+      (handle-keyboard-event (event "key_pressed"
+                                    (KeyCode/DIGIT3)))
+      (is (not (key-pressed? 0x3))))
+
+    (testing "pressing 4 doesn't get any pressed keys"
+      (handle-keyboard-event (event "key_pressed"
+                                    (KeyCode/DIGIT4)))
+      (is (not (key-pressed? 0xC))))
+
+    (testing "pressing Q doesn't get any pressed keys"
+      (handle-keyboard-event (event "key_pressed"
+                                    (KeyCode/Q)))
+      (is (not (key-pressed? 0x4))))
+
+    (testing "pressing W doesn't get any pressed keys"
+      (handle-keyboard-event (event "key_pressed"
+                                    (KeyCode/W)))
+      (is (not (key-pressed? 0x5))))
+
+    (testing "pressing E doesn't get any pressed keys"
+      (handle-keyboard-event (event "key_pressed"
+                                    (KeyCode/E)))
+      (is (not (key-pressed? 0x6))))
+
+    (testing "pressing R doesn't get any pressed keys"
+      (handle-keyboard-event (event "key_pressed"
+                                    (KeyCode/R)))
+      (is (not (key-pressed? 0xD))))
+
+    (testing "pressing A doesn't get any pressed keys"
+      (handle-keyboard-event (event "key_pressed"
+                                    (KeyCode/A)))
+      (is (not (key-pressed? 0x7))))
+    
+    (testing "pressing S doesn't get any pressed keys"
+      (handle-keyboard-event (event "key_pressed"
+                                    (KeyCode/S)))
+      (is (not (key-pressed? 0x8))))
+    
+    (testing "pressing D doesn't get any pressed keys"
+      (handle-keyboard-event (event "key_pressed"
+                                    (KeyCode/D)))
+      (is (not (key-pressed? 0x9))))
+    
+    (testing "pressing F doesn't get any pressed keys"
+      (handle-keyboard-event (event "key_pressed"
+                                    (KeyCode/F)))
+      (is (not (key-pressed? 0xE))))
+    
+    (testing "pressing Z doesn't get any pressed keys"
+      (handle-keyboard-event (event "key_pressed"
+                                    (KeyCode/Z)))
+      (is (not (key-pressed? 0xA))))
+    
+    (testing "pressing X doesn't get any pressed keys"
+      (handle-keyboard-event (event "key_pressed"
+                                    (KeyCode/X)))
+      (is (not (key-pressed? 0x0))))
+
+    (testing "pressing C doesn't get any pressed keys"
+      (handle-keyboard-event (event "key_pressed"
+                                    (KeyCode/C)))
+      (is (not (key-pressed? 0xB))))
+    
+    (testing "pressing V doesn't get any pressed keys"
+      (handle-keyboard-event (event "key_pressed"
+                                    (KeyCode/V)))
+      (is (not (key-pressed? 0xF)))))
+
   (testing "key releases in run mode"
+    (clear-keys)
     (events/mode (list :run))
     (testing "releasing key 1 gets key 1 released"
       (handle-keyboard-event (event "key_released"
@@ -152,4 +241,47 @@
     (testing "releasing key V gets key F released"
       (handle-keyboard-event (event "key_released"
                                     (KeyCode/V)))
-      (is (= (get-pressed) 0xF)))))
+      (is (= (get-pressed) 0xF)))
+    (testing "releasing key : sets command mode"
+      (handle-keyboard-event (event "key_released"
+                                    (KeyCode/COLON)))
+      (is (= (events/mode) (list :command ":")))))
+(testing "key releases in command mode"
+  (clear-keys)
+  
+  (testing "1 gets added to the text"
+    (events/mode (list :command ":"))
+    (handle-keyboard-event (event "key_released"
+                                  (KeyCode/DIGIT1)
+                                  "1"))
+    (is (= (get-pressed) nil))
+    (is (= (events/mode) (list :command ":1"))))
+  (testing "2 gets added to the text"
+    (events/mode (list :command ":"))
+    (handle-keyboard-event (event "key_released"
+                                  (KeyCode/DIGIT2)
+                                  "2"))
+    (is (= (get-pressed) nil))
+    (is (= (events/mode) (list :command ":2"))))
+  (testing "3 gets added to the text"
+    (handle-keyboard-event (event "key_released"
+                                  (KeyCode/DIGIT3)
+                                  "3"))
+    (is (= (get-pressed) nil))
+    (is (= (events/mode) (list :command ":23"))))
+  (testing "backspace deletes the last character"
+    (handle-keyboard-event (event "key_released"
+                                  (KeyCode/BACK_SPACE)
+                                  (.getName (KeyCode/BACK_SPACE))))
+    (is (= (events/mode) (list :command ":2"))))
+  (testing "enter executes command"
+    (handle-keyboard-event (event "key_released"
+                                  (KeyCode/ENTER)))
+    (is (= (events/mode) (list :execute ":2"))))
+  (testing "escape cancels command"
+    (let [cancelled? (atom false)]
+      (with-redefs [events/cancel (fn [] (swap! cancelled? #(not %)))]
+        (events/mode (list :command ":q"))
+        (handle-keyboard-event (event "key_released"
+                                      (KeyCode/ESCAPE)))
+        (is @cancelled?))))))

@@ -5,3 +5,5 @@
 (defn mode 
   ([] @active-mode)
   ([m] (swap! active-mode (fn [_] m))))
+
+(defn cancel [])
