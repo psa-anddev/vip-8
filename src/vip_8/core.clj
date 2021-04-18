@@ -3,7 +3,9 @@
             [vip-8.screen :as screen]
             [vip-8.cpu :as cpu]
             [vip-8.sound :as sound]
-            [vip-8.events :as events]))
+            [vip-8.events :as events]
+            [clojure.java.io :refer [file]]
+            [clojure.string :as string]))
 
 (defn now []
   (System/currentTimeMillis))
@@ -141,19 +143,82 @@
     (update-delay-timer
       (update-sound-timer prev-status))))
 
+(defn check-rom [args]
+  (when (seq? args)
+    (events/mode (list :load (first args)))))
+
+(defmulti iteration (fn [m _ _] (first m)))
+
+(defmethod iteration :default [m f s]
+  (prn "Default method. Mode " m)
+  nil)
+
+(defn title-text [current-file]
+  (let [fname-bit (if (nil? current-file) "" " - test.ch8")]
+    (str "Vip 8" fname-bit)))
+
+(defn update-bars [_ current-file]
+  (let [fpath-bit (if (nil? current-file) "<No ROM>" "/home/pablo/repos/emulators/vip-8/test.ch8")]
+    (screen/title (title-text current-file))
+    (screen/modline (str "Run | " fpath-bit))))
+
+(defmethod iteration :run [current-mode current-file status]
+  (update-bars current-mode current-file)
+  {:mode (events/mode)
+   :file current-file
+   :status (step status)})
+
+(defmethod iteration :load [current-mode current-file status]
+  (let [file-to-load (second current-mode)
+        file-path (file file-to-load "")
+        new-status (load-rom file-to-load)]
+    (screen/title (str  "Vip 8 - " (.getName file-path)))
+    (screen/modline (str  "Loading " 
+                         (.getAbsolutePath file-path)
+                         " ..."))
+    (events/mode (list :run))
+    {:mode (events/mode)
+     :file file-to-load
+     :status new-status}))
+
+(defmethod iteration :pause [current-mode current-file status]
+  (let [fname-bit (if (nil? current-file) "" " - test.ch8")
+        fpath-bit (if (nil? current-file) "<No ROM>" "/home/pablo/repos/emulators/vip-8/test.ch8")]
+    (screen/title (str  "Vip 8" fname-bit))
+    (screen/modline (str "Pause | " fpath-bit))
+    {:mode (events/mode)
+     :file current-file
+     :status status}))
+
+(defmethod iteration :command [current-mode current-file status]
+  (screen/modline (second current-mode))
+  {:mode (events/mode) 
+   :file current-file 
+   :status status })
+
+(defmethod iteration :execute [current-mode current-file status]
+  (let [order (string/split (second current-mode) #" ")]
+    (cond
+      (= (first order) ":q") (events/mode (list :closing))
+      (= (first order) ":load") (events/mode (list :load (second order)))
+      (= (first order) ":pause") (events/mode (list :pause))
+      (= (first order) ":run") (events/mode (list :run)))
+    {:mode (events/mode)
+     :file current-file
+     :status status}))
+
+(defn run-emulator []
+  (loop [current-mode (events/mode)
+         current-file nil
+         status {}]
+    (let [result (iteration current-mode current-file status)]
+      (when (not (nil? result))
+        (recur (:mode result)
+               (:file result)
+               (:status result))))))
+
 (defn -main [& args]
   (screen/load-window)
-  (when (seq? args)
-    (events/mode (list :load (first args))))
-  (loop [current-mode (events/mode)
-         status {}]
-    (cond 
-      (= (first current-mode) :load) 
-      (let [new-status (load-rom (second current-mode))]
-        (events/mode (list :run))
-        (recur (events/mode) new-status))
-      (= (first current-mode) :run) 
-      (recur (events/mode) (step status))
-      (= (first current-mode) :pause)
-      (recur (events/mode) status)))
+  (check-rom args)
+  (run-emulator)
   (screen/close-window))

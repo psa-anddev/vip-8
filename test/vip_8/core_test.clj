@@ -1,5 +1,6 @@
 (ns vip-8.core-test
   (:require [clojure.test :refer [deftest testing is]]
+            [clojure.java.io :refer [file]]
             [vip-8.core :refer :all]
             [vip-8.rom :as rom]
             [vip-8.screen :as screen]
@@ -413,4 +414,118 @@
                    '(:closing))
         (-main)
         (is (= @operations
-               '(:step :window-closed)))))))
+               '(:step :window-closed))))
+      (testing "command keeps the loop running"
+        (clear-operations)
+        (set-modes '(:command ":test")
+                   '(:run)
+                   '(:closing))
+        (-main)
+        (is (= @operations '(:step :window-closed))))
+      (testing "command updates the modline"
+        (clear-operations)
+        (set-modes '(:command ":test")
+                   '(:closing))
+        (-main)
+        (is (= (screen/modline) ":test"))
+        (clear-operations)
+        (set-modes '(:command ":q")
+                   '(:closing))
+        (-main)
+        (is (= (screen/modline) ":q")))
+      (testing "pause mode shows pause modeline and title"
+        (clear-operations)
+        (set-modes '(:pause)
+                   '(:closing))
+        (-main)
+        (is (= (screen/modline) "Pause | <No ROM>"))
+        (is (= (screen/title) "Vip 8")))
+      (testing "load mode shows loading modeline and title"
+        (testing "load ./ROMS/test.ch8"
+          (let [abs-path (.getAbsolutePath (file "./ROMS/test.ch8"))]
+            (clear-operations)
+            (set-modes '(:load "./ROMS/test.ch8")
+                       '(:closing))
+            (-main)
+            (is (= (screen/title) "Vip 8 - test.ch8"))
+            (is (= (screen/modline) (str "Loading " abs-path " ...")))))
+        (testing "load ~/roms/chipquarium.ch8"
+          (let [abs-path (.getAbsolutePath (file "~/roms/chipquarium.ch8"))]
+            (clear-operations)
+            (set-modes 
+              '(:load "~/roms/chipquarium.ch8"))
+            (-main)
+            (is (= (screen/title) 
+                   "Vip 8 - chipquarium.ch8"))
+            (is (= (screen/modline) 
+                   (str "Loading " abs-path " ..."))))))
+(testing "test.ch8 is displayed properly"
+  (let [abs-path (.getAbsolutePath (file "test.ch8"))]
+    (testing "pause mode shows the right file name"
+      (clear-operations)
+      (set-modes '(:load "test.ch8")
+                 '(:pause))
+
+      (-main)
+      (is (= (screen/title) "Vip 8 - test.ch8"))
+      (is (= (screen/modline) 
+             (str "Pause | " abs-path))))
+    (testing "run mode shows the right file name"
+      (clear-operations)
+      (set-modes '(:load "test.ch8")
+                 '(:run))
+
+      (-main)
+      (is (= (screen/title) "Vip 8 - test.ch8"))
+      (is (= (screen/modline) 
+             (str "Run | " abs-path))))))
+(testing "commands get executed"
+  (testing ":q will quit"
+    (clear-operations)
+    (set-modes '(:execute ":q"))
+
+    (-main)
+    (is (= @operations '({:set-mode (:closing)} 
+                         :window-closed))))
+  (testing ":load will load chipquarium"
+    (clear-operations)
+    (set-modes '(:execute ":load chipquarium.ch8"))
+
+    (-main)
+    
+    (is (= @operations '({:set-mode (:load "chipquarium.ch8")} 
+                         :window-closed))))
+  (testing ":load will load mario"
+    (clear-operations)
+    (set-modes '(:execute ":load mario.ch8"))
+
+    (-main)
+
+    (is (= @operations '({:set-mode (:load "mario.ch8")} 
+                         :window-closed))))
+  (testing ":pause will pause"
+    (clear-operations)
+    (set-modes '(:execute ":pause"))
+    
+    (-main)
+    
+    (is (= @operations '({:set-mode (:pause)}
+                         :window-closed))))
+  (testing ":run will run"
+    (clear-operations)
+    (set-modes '(:execute ":run"))
+    
+    (-main)
+    
+    (is (= @operations '({:set-mode (:run)}
+                         :window-closed))))
+  
+  (testing "unrecognized commands will be ignored"
+    (clear-operations)
+    (set-modes '(:execute ":aa")
+               '(:execute ":bb")
+               '(:execute ":false"))
+    
+    (-main)
+    
+    (is (= @operations '(:window-closed))))))))

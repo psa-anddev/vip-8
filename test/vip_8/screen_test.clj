@@ -2,6 +2,11 @@
   (:require [clojure.test :refer [deftest testing is]]
             [vip-8.screen :refer :all]))
 
+(defn restore-initial-ui-state []
+  (swap! ui-state (fn [_] {:active-pixels #{}
+                           :title "Vip 8"
+                           :modline "Pause | <No ROM>"})))
+
 (deftest clear-tests
   (testing "clears the screen"
     (swap! ui-state
@@ -50,6 +55,7 @@
     (is (= (height) 32))))
 
 (deftest title-test
+  (restore-initial-ui-state)
   (testing "returns the current title"
     (is (= (title) "Vip 8"))
     (swap! ui-state #(assoc % :title "New Title"))
@@ -61,6 +67,7 @@
     (is (= (:title @ui-state) "Some other title"))))
 
 (deftest modline-test
+  (restore-initial-ui-state)
   (testing "returns the value for the modline"
     (is (= (modline) "Pause | <No ROM>"))
     (swap! ui-state #(assoc % :modline "Some modline"))
