@@ -6,7 +6,8 @@
 
 (def ui-state (atom {:active-pixels #{}
                      :title "Vip 8"
-                     :modline "Pause | <No ROM>"}))
+                     :modline "Pause | <No ROM>"
+                     :showing true}))
 
 (defn clear 
   "Clears the screen"
@@ -86,7 +87,7 @@
     (fx/wrap-map-desc
       (fn [ui-state]
         {:fx/type :stage
-         :showing true
+         :showing (:showing ui-state)
          :title (:title ui-state)
          :scene {:fx/type :scene
                  :on-key-pressed {:event/type ::keyboard/key_pressed}
@@ -109,5 +110,6 @@
   (fx/on-fx-thread
     (fx/mount-renderer ui-state renderer)))
 
-(defn close-window [])
+(defn close-window []
+  (swap! ui-state #(assoc % :showing false)))
 
