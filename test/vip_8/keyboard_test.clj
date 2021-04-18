@@ -244,7 +244,8 @@
       (is (= (get-pressed) 0xF)))
     (testing "releasing key : sets command mode"
       (handle-keyboard-event (event "key_released"
-                                    (KeyCode/COLON)))
+                                    (KeyCode/COLON)
+                                    ":"))
       (is (= (events/mode) (list :command ":")))))
 (testing "key releases in command mode"
   (clear-keys)

@@ -149,8 +149,7 @@
 
 (defmulti iteration (fn [m _ _] (first m)))
 
-(defmethod iteration :default [m f s]
-  (prn "Default method. Mode " m)
+(defmethod iteration :default [_ _ _]
   nil)
 
 (defn title-text [current-file]

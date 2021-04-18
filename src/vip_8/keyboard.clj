@@ -52,7 +52,7 @@
 
 (defmethod handle-keyboard-event ::key_released [{:keys [fx/context fx/event]}]
   (letfn [(run-mode-handling []
-            (if (= (.getCode event) KeyCode/COLON)
+            (if (= (.getText event) ":")
               (events/mode (list :command ":"))
               (let [new-key (to-keypad (.getCode event))]
                 (swap! pressed-keys #(into #{} (remove (fn [v] (= v new-key)) %)))
