@@ -180,7 +180,7 @@
       {:mode (events/mode)
        :file file-to-load
        :status new-status})
-    (catch Exception e 
+    (catch Exception _ 
       (screen/modline "Error: File not found")
       (screen/title "Vip 8")
       (events/mode (list :pause))
@@ -188,7 +188,7 @@
        :file current-file
        :status status})))
 
-(defmethod iteration :pause [current-mode current-file status]
+(defmethod iteration :pause [_ current-file status]
   (let [fname-bit (if (nil? current-file) "" " - test.ch8")
         fpath-bit (if (nil? current-file) "<No ROM>" "/home/pablo/repos/emulators/vip-8/test.ch8")]
     (screen/title (str  "Vip 8" fname-bit))
