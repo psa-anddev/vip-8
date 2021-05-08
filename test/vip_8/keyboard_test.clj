@@ -285,4 +285,22 @@
         (events/mode (list :command ":q"))
         (handle-keyboard-event (event "key_released"
                                       (KeyCode/ESCAPE)))
-        (is @cancelled?))))))
+        (is @cancelled?)))))
+(testing "key releases in pause mode"
+  (clear-keys)
+  (testing "enter is ignored"
+    (events/mode (list :pause))
+    
+    (handle-keyboard-event (event "key_released" 
+                                  (KeyCode/ENTER)))
+    
+    (is (= (events/mode) (list :pause))))
+  
+  (testing ": goes into command mode"
+    (events/mode (list :pause))
+    
+    (handle-keyboard-event (event "key_released"
+                                  (KeyCode/COLON)
+                                  ":"))
+    
+    (is (= (events/mode) (list :command ":"))))))

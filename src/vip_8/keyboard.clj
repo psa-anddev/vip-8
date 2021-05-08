@@ -57,8 +57,12 @@
               (let [new-key (to-keypad (.getCode event))]
                 (swap! pressed-keys #(into #{} (remove (fn [v] (= v new-key)) %)))
                 (swap! released-keys #(cons new-key %)))))]
-    (if (= (first (events/mode)) :run)
-      (run-mode-handling)
+    (cond 
+      (= (first (events/mode)) :run) (run-mode-handling)
+      (and (= (first (events/mode)) :pause)
+           (= (.getText event) ":")) 
+      (events/mode (list :command ":"))
+      (= (first (events/mode)) :command)
       (let [code (.getCode event)]
         (cond
           (= code (KeyCode/BACK_SPACE))
