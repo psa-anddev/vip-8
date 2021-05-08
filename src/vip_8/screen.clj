@@ -107,9 +107,12 @@
 
 
 (defn load-window []
+  (swap! ui-state #(assoc % :showing true))
   (fx/on-fx-thread
     (fx/mount-renderer ui-state renderer)))
 
 (defn close-window []
-  (swap! ui-state #(assoc % :showing false)))
+  (swap! ui-state #(assoc % :showing false))
+  (fx/on-fx-thread
+    (fx/unmount-renderer ui-state renderer)))
 
