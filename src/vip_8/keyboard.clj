@@ -77,3 +77,6 @@
           (events/mode (list :command 
                                (str (second (events/mode))
                                     (.getText event)))))))))
+
+(defmethod handle-keyboard-event ::close [_]
+  (events/mode (list :closing)))

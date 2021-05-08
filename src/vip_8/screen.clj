@@ -87,6 +87,7 @@
     (fx/wrap-map-desc
       (fn [ui-state]
         {:fx/type :stage
+         :on-close-request {:event/type ::keyboard/close}
          :showing (:showing ui-state)
          :title (:title ui-state)
          :scene {:fx/type :scene

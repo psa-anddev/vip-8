@@ -7,6 +7,7 @@
   (:import [javafx.scene.input KeyCode KeyEvent]))
 
 (defn event 
+  ([] {:event/type (keyword "vip-8.keyboard" "close")})
   ([event-type key-code] (event event-type key-code ""))
   ([event-type key-code text]
    {:event/type (keyword "vip-8.keyboard" event-type)
@@ -304,3 +305,9 @@
                                   ":"))
     
     (is (= (events/mode) (list :command ":"))))))
+
+(deftest closing-event-test
+  (testing "closing event sets mode to closing"
+    (handle-keyboard-event (event))
+    
+    (is (= (events/mode) (list :closing)))))
