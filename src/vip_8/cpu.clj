@@ -114,7 +114,7 @@
                                (<= 0 y 31))
                 should-flip? (bit-test sprite-bits current-bit)]
             (when (and in-range? should-flip?)
-              (screen/set x y (not was-on?)))
+              (screen/set-pixel x y (not was-on?)))
             (recur (if (> current-bit 0) (dec current-bit) 7)
                    (if (= current-bit 0) (inc current-row) current-row)
                    (if (and (= (:vF (:registers s))

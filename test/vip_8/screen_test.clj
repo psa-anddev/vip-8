@@ -32,20 +32,20 @@
     (is (not (is-on? 15 2)))
     (is (not (is-on? 15 7)))))
 
-(deftest set-test
+(deftest set-pixel-test
   (swap! ui-state #(assoc % :active-pixels #{}))
   (testing "ligtened pixels are added to the set"
-    (set 15 8 true)
-    (set 20 7 true)
-    (set 5 22 true)
-    (set 30 20 true)
+    (set-pixel 15 8 true)
+    (set-pixel 20 7 true)
+    (set-pixel 5 22 true)
+    (set-pixel 30 20 true)
     (is (contains? (:active-pixels  @ui-state) 
                    (list 15 8)))
     (is (contains? (:active-pixels @ui-state)
                    (list 20 7))))
   (testing "not lightened pixels are removed from the set"
-    (set 5 22 false)
-    (set 30 20 false)
+    (set-pixel 5 22 false)
+    (set-pixel 30 20 false)
     (is (not (contains? (:active-pixels @ui-state)
                         (list 5 22))))))
 

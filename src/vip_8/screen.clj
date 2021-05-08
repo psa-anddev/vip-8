@@ -20,7 +20,7 @@
   (contains? (:active-pixels @ui-state)
              (list x y)))
 
-(defn set 
+(defn set-pixel 
   "Sets a pixel of the screen"
   [x y on?]
   (let [active-pixels (:active-pixels @ui-state)]

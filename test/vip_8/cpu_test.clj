@@ -270,7 +270,7 @@
       (with-redefs [screen/is-on? 
                     (fn [x y] 
                       (contains? @screen (list x y)))
-                    screen/set 
+                    screen/set-pixel 
                     (fn [x y on?]
                       (swap! screen
                              (fn [v]

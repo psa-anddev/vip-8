@@ -1,4 +1,5 @@
 (ns vip-8.core
+  (:gen-class)
   (:require [vip-8.rom :as rom]
             [vip-8.screen :as screen]
             [vip-8.cpu :as cpu]

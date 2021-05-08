@@ -38,7 +38,7 @@
                                       (let [current-screen @screen]
                                         (nth (nth current-screen y)
                                              x)))
-                      screen/set (fn [x y on?] 
+                      screen/set-pixel (fn [x y on?] 
                                    (swap! screen 
                                           (fn [v] 
                                             (assoc v
