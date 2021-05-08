@@ -168,17 +168,25 @@
    :status (step status)})
 
 (defmethod iteration :load [current-mode current-file status]
-  (let [file-to-load (second current-mode)
-        file-path (file file-to-load "")
-        new-status (load-rom file-to-load)]
-    (screen/title (str  "Vip 8 - " (.getName file-path)))
-    (screen/modline (str  "Loading " 
-                         (.getAbsolutePath file-path)
-                         " ..."))
-    (events/mode (list :run))
-    {:mode (events/mode)
-     :file file-to-load
-     :status new-status}))
+  (try
+    (let [file-to-load (second current-mode)
+          file-path (file file-to-load "")
+          new-status (load-rom file-to-load)]
+      (screen/title (str  "Vip 8 - " (.getName file-path)))
+      (screen/modline (str  "Loading " 
+                           (.getAbsolutePath file-path)
+                           " ..."))
+      (events/mode (list :run))
+      {:mode (events/mode)
+       :file file-to-load
+       :status new-status})
+    (catch Exception e 
+      (screen/modline "Error: File not found")
+      (screen/title "Vip 8")
+      (events/mode (list :pause))
+      {:mode (events/mode)
+       :file current-file
+       :status status})))
 
 (defmethod iteration :pause [current-mode current-file status]
   (let [fname-bit (if (nil? current-file) "" " - test.ch8")

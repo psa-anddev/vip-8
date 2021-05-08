@@ -528,4 +528,20 @@
     
     (-main)
     
-    (is (= @operations '(:window-closed))))))))
+    (is (= @operations '(:window-closed))))))
+
+(with-redefs [screen/load-window 
+              (fn [] (swap! main-window-loaded? (fn [_] true)))
+              screen/close-window 
+              (fn [] (swap! operations #(concat % '(:window-closed))))
+              load-rom (fn [_] 
+                         (throw (Exception. "File not found")))
+              events/mode mode-fn
+              step (fn [_] 
+                     (swap! operations #(concat % '(:step))))]
+  (set-modes '(:load "chipquarium.ch8"))
+  
+  (-main)
+  
+  (is (= (screen/modline) "Error: File not found"))
+  (is (= (screen/title) "Vip 8")))))
