@@ -2,7 +2,8 @@
   (:require [cljfx.api :as fx]
             [vip-8.keyboard :as keyboard])
   (:import [javafx.scene.canvas Canvas]
-           [javafx.scene.paint Color]))
+           [javafx.scene.paint Color]
+           [javafx.application Platform]))
 
 (def ui-state (atom {:active-pixels #{}
                      :title "Vip 8"
@@ -117,5 +118,6 @@
 (defn close-window []
   (swap! ui-state #(assoc % :showing false))
   (fx/on-fx-thread
-    (fx/unmount-renderer ui-state renderer)))
+    (fx/unmount-renderer ui-state renderer))
+  (Platform/exit))
 
