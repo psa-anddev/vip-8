@@ -6,7 +6,7 @@
 
 (def ui-state (atom {:active-pixels #{}
                      :title "Vip 8"
-                     :modline "Pause | <No ROM>"
+                     :modline ""
                      :showing true}))
 
 (defn clear 
