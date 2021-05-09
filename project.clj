@@ -13,4 +13,5 @@
   :repl-options {:init-ns vip-8.core}
   :main vip-8.core
   :profiles {:uberjar {:aot :all
-                       :jvm-opts ["-Dcljfx.skip-javafx-initialization=true"]}})
+                       :jvm-opts ["-Dcljfx.skip-javafx-initialization=true"]}
+             :test {:jvm-opts ["-Dcljfx.skip-javafx-initialization=true"]}})
