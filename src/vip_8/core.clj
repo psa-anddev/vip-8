@@ -205,6 +205,14 @@
    :file current-file
    :status status})
 
+(defmethod iteration :reload [current-mode current-file status]
+  (screen/modline " ")
+  (events/mode (second current-mode))
+  (Thread/sleep 50)
+  {:mode (events/mode)
+   :file current-file
+   :status status})
+
 (defmethod iteration :command [current-mode current-file status]
   (screen/modline (second current-mode))
   {:mode (events/mode) 

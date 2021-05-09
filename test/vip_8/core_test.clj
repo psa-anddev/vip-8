@@ -549,6 +549,31 @@
     
     (is (= @operations '({:set-mode (:run)}
                          :window-closed))))
+
+  (testing ":reload mode"
+    (testing "sets modeline to space"
+      (clear-operations)
+      (set-modes '(:reload (:pause)))
+      
+      (-main)
+      
+      (is (= (screen/modline) " ")))
+    (testing "set mode back to pause"
+      (clear-operations)
+      (set-modes '(:reload (:pause)))
+      
+      (-main)
+      
+      (is (= @operations '({:set-mode (:pause)}
+                           :window-closed))))
+    (testing "set mode back to command"
+      (clear-operations)
+      (set-modes '(:reload (:command ":lo")))
+      
+      (-main)
+      
+      (is (= @operations '({:set-mode (:command ":lo")}
+                           :window-closed)))))
   
   (testing "unrecognized commands will be ignored"
     (clear-operations)
