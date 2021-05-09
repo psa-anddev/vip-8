@@ -66,8 +66,11 @@
       (let [code (.getCode event)]
         (cond
           (= code (KeyCode/BACK_SPACE))
-          (events/mode (list :command
-                             (string/join "" (drop-last (second (events/mode))))))
+          (let [command-text (string/join "" (drop-last (second (events/mode))))]
+            (if (string/blank? command-text)
+              (events/cancel)
+              (events/mode (list :command
+                                 command-text))))
           (= code (KeyCode/ENTER))
           (events/mode (list :execute
                              (second (events/mode))))

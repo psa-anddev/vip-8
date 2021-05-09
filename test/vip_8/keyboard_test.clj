@@ -1,8 +1,6 @@
 (ns vip-8.keyboard-test
   (:require [clojure.test :refer [deftest testing is]]
-            [cljfx.api :as fx]
             [vip-8.keyboard :refer :all]
-            [vip-8.screen :as screen]
             [vip-8.events :as events])
   (:import [javafx.scene.input KeyCode KeyEvent]))
 
@@ -276,7 +274,16 @@
                                   (KeyCode/BACK_SPACE)
                                   (.getName (KeyCode/BACK_SPACE))))
     (is (= (events/mode) (list :command ":2"))))
+  (testing "backspace cancels command when text is empty"
+    (let [cancelled? (atom false)]
+      (with-redefs [events/cancel (fn [] (swap! cancelled? #(not %)))]
+        (events/mode (list :command ":"))
+        (handle-keyboard-event (event "key_released"
+                                      (KeyCode/BACK_SPACE)))
+        (is @cancelled?))))
+
   (testing "enter executes command"
+    (events/mode (list :command ":2"))
     (handle-keyboard-event (event "key_released"
                                   (KeyCode/ENTER)))
     (is (= (events/mode) (list :execute ":2"))))

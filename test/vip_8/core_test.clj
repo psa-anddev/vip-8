@@ -499,6 +499,16 @@
       (is (= (screen/title) "Vip 8 - space-invaders.ch8"))
       (is (= (screen/modline) 
              (str "Run | " abs-path))))))
+
+(testing "modline doesn't get updated if mode hasn't changed"
+  (clear-operations)
+  (set-modes '(:pause))
+  
+  (screen/modline "Pause | Error")
+
+  (-main)
+  
+  (is (= (screen/modline) "Pause | Error")))
 (testing "commands get executed"
   (testing ":q will quit"
     (clear-operations)
@@ -559,9 +569,11 @@
               events/mode mode-fn
               step (fn [_] 
                      (swap! operations #(concat % '(:step))))]
+  (clear-operations)
   (set-modes '(:load "chipquarium.ch8"))
   
   (-main)
   
-  (is (= (screen/modline) "Error: File not found"))
+  (is (= @operations '({:set-mode (:pause)} :window-closed)))
+  (is (= (screen/modline) "Pause | Error: File not found"))
   (is (= (screen/title) "Vip 8")))))

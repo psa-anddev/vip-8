@@ -164,7 +164,9 @@
         (if (nil? current-file) 
           "<No ROM>" 
           (.getAbsolutePath loaded-file))]
-    (str mode-text " | " fpath-bit)))
+    (if (not (string/starts-with? (screen/modline) mode-text))
+      (str mode-text " | " fpath-bit)
+      (screen/modline))))
 
 (defn update-bars [current-mode current-file]
   (screen/title (title-text current-file))
@@ -190,7 +192,7 @@
        :file file-to-load
        :status new-status})
     (catch Exception _ 
-      (screen/modline "Error: File not found")
+      (screen/modline "Pause | Error: File not found")
       (screen/title "Vip 8")
       (events/mode (list :pause))
       {:mode (events/mode)
