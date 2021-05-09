@@ -1,4 +1,5 @@
 # vip-8
+![pipeline](https://github.com/github/docs/actions/workflows/pipeline.yml/badge.svg)
 
 Vip-8 is a Chip-8 emulator written in Clojure which has modes based on Vim. I wanted to see if it would be possible to write an emulator using functional programming keeping global mutable state to a minimum. I also wanted to learn a bit of assembler without having to write it myself. 
 
