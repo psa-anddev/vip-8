@@ -479,6 +479,26 @@
       (is (= (screen/title) "Vip 8 - test.ch8"))
       (is (= (screen/modline) 
              (str "Run | " abs-path))))))
+(testing "space-invaders.ch8 is displayed properly"
+  (let [abs-path (.getAbsolutePath (file "space-invaders.ch8"))]
+    (testing "pause mode shows the right file name"
+      (clear-operations)
+      (set-modes '(:load "space-invaders.ch8")
+                 '(:pause))
+
+      (-main)
+      (is (= (screen/title) "Vip 8 - space-invaders.ch8"))
+      (is (= (screen/modline) 
+             (str "Pause | " abs-path))))
+    (testing "run mode shows the right file name"
+      (clear-operations)
+      (set-modes '(:load "space-invaders.ch8")
+                 '(:run))
+
+      (-main)
+      (is (= (screen/title) "Vip 8 - space-invaders.ch8"))
+      (is (= (screen/modline) 
+             (str "Run | " abs-path))))))
 (testing "commands get executed"
   (testing ":q will quit"
     (clear-operations)

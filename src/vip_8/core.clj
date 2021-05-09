@@ -154,13 +154,21 @@
   nil)
 
 (defn title-text [current-file]
-  (let [fname-bit (if (nil? current-file) "" " - test.ch8")]
+  (let [fname-bit (if (nil? current-file) "" (str  " - " (.getName (file current-file))))]
     (str "Vip 8" fname-bit)))
 
-(defn update-bars [_ current-file]
-  (let [fpath-bit (if (nil? current-file) "<No ROM>" "/home/pablo/repos/emulators/vip-8/test.ch8")]
-    (screen/title (title-text current-file))
-    (screen/modline (str "Run | " fpath-bit))))
+(defn modline-text [current-mode current-file]
+  (let [mode-text (string/capitalize (subs (str (first current-mode)) 1))
+        loaded-file (file current-file)
+        fpath-bit 
+        (if (nil? current-file) 
+          "<No ROM>" 
+          (.getAbsolutePath loaded-file))]
+    (str mode-text " | " fpath-bit)))
+
+(defn update-bars [current-mode current-file]
+  (screen/title (title-text current-file))
+  (screen/modline (modline-text current-mode current-file)))
 
 (defmethod iteration :run [current-mode current-file status]
   (update-bars current-mode current-file)
@@ -189,14 +197,11 @@
        :file current-file
        :status status})))
 
-(defmethod iteration :pause [_ current-file status]
-  (let [fname-bit (if (nil? current-file) "" " - test.ch8")
-        fpath-bit (if (nil? current-file) "<No ROM>" "/home/pablo/repos/emulators/vip-8/test.ch8")]
-    (screen/title (str  "Vip 8" fname-bit))
-    (screen/modline (str "Pause | " fpath-bit))
-    {:mode (events/mode)
-     :file current-file
-     :status status}))
+(defmethod iteration :pause [current-mode current-file status]
+  (update-bars current-mode current-file)
+  {:mode (events/mode)
+   :file current-file
+   :status status})
 
 (defmethod iteration :command [current-mode current-file status]
   (screen/modline (second current-mode))
