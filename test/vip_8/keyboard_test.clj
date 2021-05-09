@@ -5,7 +5,8 @@
   (:import [javafx.scene.input KeyCode KeyEvent]))
 
 (defn event 
-  ([] {:event/type (keyword "vip-8.keyboard" "close")})
+  ([] (event "close"))
+  ([event-type] {:event/type (keyword "vip-8.keyboard" event-type)})
   ([event-type key-code] (event event-type key-code ""))
   ([event-type key-code text]
    {:event/type (keyword "vip-8.keyboard" event-type)
@@ -318,3 +319,17 @@
     (handle-keyboard-event (event))
     
     (is (= (events/mode) (list :closing)))))
+
+(deftest resizing-event-test
+  (testing "resized event sets mode to reload when pause"
+    (events/mode '(:pause))
+    (handle-keyboard-event (event "resized"))
+    
+    (is (= (events/mode) '(:reload (:pause)))))
+  (testing "resized event sets mode to reload when in command"
+    (let [m '(:command ":lo")]
+      (events/mode m)
+      
+      (handle-keyboard-event (event "resized"))
+      
+      (is (= (events/mode) (list :reload m))))))

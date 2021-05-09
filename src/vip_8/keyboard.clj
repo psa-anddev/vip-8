@@ -83,3 +83,7 @@
 
 (defmethod handle-keyboard-event ::close [_]
   (events/mode (list :closing)))
+
+(defmethod handle-keyboard-event ::resized [_]
+  (let [m (events/mode)]
+    (events/mode (list :reload m))))

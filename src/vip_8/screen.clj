@@ -88,6 +88,8 @@
       (fn [ui-state]
         {:fx/type :stage
          :on-close-request {:event/type ::keyboard/close}
+         :on-width-changed {:event/type ::keyboard/resized}
+         :on-height-changed {:event/type ::keyboard/resized}
          :showing (:showing ui-state)
          :title (:title ui-state)
          :scene {:fx/type :scene
