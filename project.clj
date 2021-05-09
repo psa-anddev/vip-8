@@ -11,4 +11,6 @@
                  [org.openjfx/javafx-graphics "16-ea+6"]
                  [org.openjfx/javafx-controls "16-ea+6"]]
   :repl-options {:init-ns vip-8.core}
-  :main vip-8.core)
+  :main vip-8.core
+  :profiles {:uberjar {:aot :all
+                       :jvm-opts ["-Dcljfx.skip-javafx-initialization=true"]}})
