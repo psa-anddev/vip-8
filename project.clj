@@ -11,5 +11,4 @@
                  [org.openjfx/javafx-graphics "16-ea+6"]
                  [org.openjfx/javafx-controls "16-ea+6"]]
   :repl-options {:init-ns vip-8.core}
-  :main vip-8.core
-  :aot :all)
+  :main vip-8.core)
