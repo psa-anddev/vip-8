@@ -29,16 +29,18 @@ Bear in mind that there is no autocompletion, since this is meant to be an exerc
 Inside the emulator, you can use `:q` to exit `:pause` to pause and `:run` to keep running the currently loaded ROM. 
 
 The keyboard of the Chip-8 is hardcoded as follows
+
 |   |   |   |   |
------------------
+|---------------|
 | 1 | 2 | 3 | 4 |
 | Q | W | E | R |
 | A | S | D | F |
 | Z | X | C | V |
 
 Which map to
+
 |   |   |   |   |
------------------
+|---------------|
 | 1 | 2 | 3 | C |
 | 4 | 5 | 6 | D |
 | 7 | 8 | 9 | E |
