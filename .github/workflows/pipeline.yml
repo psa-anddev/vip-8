@@ -1,17 +1,13 @@
 name: Vip 8 pipeline
 on: [push]
 jobs:
-    Test:
+    Pipeline:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v2
             - name: Download dependencies
               run: lein deps
+            - name: Build release
+              run: lein uberjar
             - name: Run Tests
               run: lein test
-    Release:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v2
-            - name: create jar
-              run: lein uberjar
